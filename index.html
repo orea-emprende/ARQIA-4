@@ -1,0 +1,2123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ef4444"/>
+    <title>ARQIA 4 - Tarjeta Digital</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: #020617 !important;
+            color: #f8fafc !important;
+            margin: 0;
+            padding: 16px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes rotate { to { transform: rotate(360deg); } }
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+        @keyframes waveBar {
+            0%, 100% { height: 8px; }
+            50% { height: 28px; }
+        }
+        
+        .animated-border-glow {
+            position: relative;
+            padding: 3px;
+            overflow: hidden;
+            border-radius: 9999px;
+        }
+        .animated-border-glow::before {
+            content: '';
+            position: absolute;
+            inset: -50%;
+            z-index: 0;
+            border-radius: inherit;
+            background: conic-gradient(from 180deg, #ef4444, #7f1d1d, #18181b, #ef4444);
+            animation: rotate 3s linear infinite;
+        }
+        .animated-border-glow > * { position: relative; z-index: 1; }
+        
+        .modal-content { transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: #ef4444; }
+
+        .tech-card {
+            background-color: rgba(15, 23, 42, 0.95);
+            border: 1px solid #1e293b;
+            border-radius: 24px;
+            box-shadow: 0 0 50px rgba(239, 68, 68, 0.18);
+            width: 100%;
+            max-width: 380px;
+            padding: 24px;
+            margin: 16px auto;
+        }
+
+        .btn-burned-red {
+            background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%);
+            color: #fecaca;
+            border: 1px solid #7f1d1d;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+        .btn-burned-red:hover, .btn-burned-red:focus, .btn-burned-red:active {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%) !important;
+            color: #ffffff !important;
+            border-color: #f87171 !important;
+            box-shadow: 0 0 30px rgba(255, 20, 20, 0.85) !important;
+            transform: scale(1.02);
+        }
+
+        .wave-bar {
+            width: 4px;
+            background-color: #ef4444;
+            border-radius: 9999px;
+            animation: waveBar 1s ease-in-out infinite;
+        }
+
+        .btn-black-gray-glow {
+            background: linear-gradient(135deg, #020617 0%, #1e293b 50%, #334155 100%);
+            color: #f1f5f9;
+            border: 1px solid #475569;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-black-gray-glow:hover, .btn-black-gray-glow:focus, .btn-black-gray-glow:active {
+            background: #ffffff !important;
+            color: #020617 !important;
+            border-color: #ffffff !important;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.9) !important;
+            transform: scale(1.02);
+        }
+        .btn-black-gray-glow:hover svg, .btn-black-gray-glow:focus svg, .btn-black-gray-glow:active svg {
+            color: #020617 !important;
+        }
+
+        .btn-gray-translucent-glow {
+            background: linear-gradient(135deg, #020617 0%, #1e293b 100%);
+            color: #f1f5f9;
+            border: 1px solid #475569;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-gray-translucent-glow:hover, .btn-gray-translucent-glow:focus, .btn-gray-translucent-glow:active {
+            background: rgba(100, 116, 139, 0.4) !important;
+            color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 0 25px rgba(148, 163, 184, 0.6) !important;
+            backdrop-filter: blur(8px);
+            transform: scale(1.02);
+        }
+
+        #ai-quick-select {
+            background-color: rgba(2, 6, 23, 0.9);
+            color: #f1f5f9;
+            border: 1px solid #ef4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #ai-quick-select:hover, #ai-quick-select:focus {
+            border-color: #f87171 !important;
+            box-shadow: 0 0 18px rgba(239, 68, 68, 0.6) !important;
+            background-color: rgba(15, 23, 42, 0.95) !important;
+        }
+        #ai-quick-select option {
+            background-color: #090d16;
+            color: #cbd5e1;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 flex flex-col items-center justify-center min-h-screen p-4 sm:p-6 relative overflow-x-hidden">
+
+    <!-- Ambient Tech Glow -->
+    <div class="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-600/15 rounded-full blur-[120px] pointer-events-none z-0"></div>
+
+    <div class="tech-card relative z-10">
+
+        <!-- HEADER / PERFIL -->
+        <header class="flex flex-col items-center text-center">
+            <div class="relative w-44 h-44 flex items-center justify-center mx-auto">
+                <div class="animated-border-glow w-full h-full rounded-full shadow-[0_0_30px_rgba(239,68,68,0.45)] flex items-center justify-center">
+                    <div class="w-full h-full rounded-full bg-slate-950 flex items-center justify-center p-3 overflow-hidden">
+                        <img 
+                            id="display-photo"
+                            src="https://i.postimg.cc/J7KvQXmy/5555.png" 
+                            alt="Foto de perfil ARQIA 4" 
+                            class="max-w-full max-h-full object-contain object-center block mx-auto my-auto"
+                            onerror="this.onerror=null; this.src='https://placehold.co/160x160/EF4444/FFFFFF?text=ARQIA';"
+                        >
+                    </div>
+                </div>
+                <span class="absolute bottom-1.5 right-1.5 bg-red-600 p-2 rounded-full border-2 border-slate-900 z-10 shadow-lg shadow-red-600/50">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </span>
+            </div>
+            
+            <h1 id="display-name" class="text-3xl font-extrabold text-white mt-4 tracking-tight">ARQIA 4</h1>
+            <p id="display-title" class="text-red-500 font-semibold text-base mt-1 tracking-wide uppercase text-xs">Creación e Innovación</p>
+            <p id="display-desc" class="text-slate-400 mt-3 text-sm max-w-xs leading-relaxed">
+                Diseñamos espacios, proyectamos ideas, transformamos visiones.<br>Con precisión arquitectónica y creatividad digital, convertimos cada proyecto en una experiencia única.
+            </p>
+        </header>
+
+        <section class="flex justify-center items-center gap-3.5 mt-6">
+             <!-- Location Icon -->
+             <a id="link-map" href="https://maps.google.com/?q=Le%C3%B3n,+Gto." target="_blank" rel="noopener noreferrer" class="p-2.5 bg-slate-800/80 text-red-500 rounded-xl hover:bg-red-500/20 border border-red-500/40 hover:border-red-400/80 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-[0_0_12px_rgba(239,68,68,0.3)] hover:shadow-[0_0_20px_rgba(239,68,68,0.65)] active:shadow-[0_0_28px_rgba(239,68,68,0.95)] flex items-center justify-center outline-none" title="León, Gto.">
+                 <svg class="w-7 h-7 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                 <span id="display-address" class="hidden">León, Gto.</span>
+             </a>
+
+             <!-- WhatsApp Icon -->
+             <a id="link-whatsapp" href="https://wa.me/524776592182" target="_blank" rel="noopener noreferrer" class="p-2.5 bg-slate-800/80 text-emerald-400 rounded-xl hover:bg-emerald-500/20 hover:border-emerald-500/60 border border-emerald-500/30 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-[0_0_12px_rgba(16,185,129,0.2)] hover:shadow-[0_0_20px_rgba(16,185,129,0.6)] active:shadow-[0_0_28px_rgba(16,185,129,0.9)] flex items-center justify-center outline-none" title="WhatsApp">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" viewBox="0 0 16 16" class="w-7 h-7 shrink-0">
+                     <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+                 </svg>
+             </a>
+
+             <!-- Instagram Icon -->
+             <a id="link-instagram" href="https://www.instagram.com/arqia_4/" target="_blank" rel="noopener noreferrer" class="p-2.5 bg-slate-800/80 rounded-xl hover:bg-slate-700/50 border border-fuchsia-500/40 hover:border-fuchsia-400/80 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-[0_0_12px_rgba(217,70,239,0.3)] hover:shadow-[0_0_20px_rgba(217,70,239,0.65)] active:shadow-[0_0_28px_rgba(217,70,239,0.95)] flex items-center justify-center outline-none" title="Instagram">
+                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="w-7 h-7 shrink-0">
+                     <defs>
+                         <linearGradient id="igIconGradDirect" x1="0%" y1="100%" x2="100%" y2="0%">
+                             <stop offset="0%" stop-color="#f97316" />
+                             <stop offset="30%" stop-color="#f43f5e" />
+                             <stop offset="70%" stop-color="#d946ef" />
+                             <stop offset="100%" stop-color="#8b5cf6" />
+                         </linearGradient>
+                     </defs>
+                     <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" stroke="url(#igIconGradDirect)" stroke-width="2.3" />
+                     <circle cx="12" cy="12" r="4.2" stroke="url(#igIconGradDirect)" stroke-width="2.2" />
+                     <circle cx="17.2" cy="6.8" r="1.2" fill="url(#igIconGradDirect)" />
+                 </svg>
+             </a>
+
+             <!-- TikTok Icon -->
+             <a id="link-tiktok" href="https://www.tiktok.com/@arqia_4" target="_blank" rel="noopener noreferrer" class="p-2.5 bg-slate-800/80 rounded-xl hover:bg-cyan-500/20 border border-cyan-500/40 hover:border-cyan-400/80 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-[0_0_12px_rgba(6,182,212,0.3)] hover:shadow-[0_0_20px_rgba(6,182,212,0.65)] active:shadow-[0_0_28px_rgba(6,182,212,0.95)] flex items-center justify-center outline-none" title="TikTok">
+                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-7 h-7 shrink-0 text-cyan-400">
+                     <path d="M19.589 6.686a4.793 4.793 0 0 1-3.77-4.245V2h-3.445v13.672a2.896 2.896 0 0 1-2.901 2.883 2.892 2.892 0 0 1-2.888-2.883 2.892 2.892 0 0 1 2.888-2.883c.367 0 .714.073 1.031.205V9.45a6.31 6.31 0 0 0-1.031-.086 6.337 6.337 0 0 0-6.338 6.333A6.337 6.337 0 0 0 9.574 22a6.337 6.337 0 0 0 6.338-6.333V9.282a8.163 8.163 0 0 0 4.777 1.528V7.365a4.854 4.854 0 0 1-1.1-.679z"/>
+                 </svg>
+             </a>
+        </section>
+
+        <footer class="mt-8 flex flex-col gap-3">
+            <!-- SERVICIOS -->
+            <button id="services-btn" class="group flex items-center justify-center w-full bg-red-950/70 text-slate-100 font-bold py-3 px-4 rounded-xl text-sm sm:text-base border border-red-400 shadow-[0_0_12px_rgba(239,68,68,0.35)] hover:bg-red-900/80 hover:text-white hover:border-red-300 hover:shadow-[0_0_22px_rgba(239,68,68,0.7)] active:shadow-[0_0_35px_rgba(239,68,68,1)] active:scale-95 transition-all duration-300">
+                <svg class="w-5 h-5 mr-3 text-red-500 group-hover:text-red-400 transition-colors duration-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                <span>Servicios Arquitectónicos</span>
+            </button>
+
+            <!-- BOTÓN COTIZADOR & ASISTENTE IA -->
+            <button id="ai-assistant-btn" class="group flex items-center justify-center w-full btn-burned-red font-bold py-3 px-4 rounded-xl text-sm sm:text-base">
+                <svg class="w-5 h-5 mr-3 text-red-500 fill-red-500 drop-shadow-[0_0_12px_rgba(239,68,68,1)] transition-transform duration-300 group-hover:scale-110 shrink-0" viewBox="0 0 24 24"><path d="M13 2L3 14h7v8l10-12h-7l3-8z"/></svg>
+                <span>Hola, Soy tu asistente ARIA</span>
+            </button>
+
+            <!-- GENERADOR DE RENDERS -->
+            <button id="ai-render-btn" class="flex items-center justify-center w-full bg-slate-950/90 text-red-400 font-bold py-3 px-4 rounded-xl hover:bg-slate-800 transition-all duration-200 hover:scale-[1.02] active:scale-95 border border-red-500/40 shadow-sm hover:border-red-500 text-sm sm:text-base">
+                <svg class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                <span>Generar Ideas Render IA</span>
+            </button>
+
+            <!-- REGISTRO DE PLATAFORMA DE USUARIO -->
+            <button id="newsletter-btn" class="group flex items-center justify-center w-full btn-gray-translucent-glow font-bold py-3 px-4 rounded-xl text-sm sm:text-base">
+                <svg class="w-5 h-5 mr-3 drop-shadow-[0_0_12px_rgba(239,68,68,1)] transition-transform duration-300 group-hover:scale-110 shrink-0" viewBox="0 0 24 24">
+                    <path d="M13 2L3 14h7v8l10-12h-7l3-8z" fill="#ef4444" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span id="platform-btn-text">ARQIA SECRET</span>
+            </button>
+
+            <!-- BOTÓN GUARDAR CONTACTO -->
+            <button id="save-contact-btn" class="group flex items-center justify-center w-full bg-emerald-950/70 text-emerald-300 font-bold py-3 px-4 rounded-xl text-sm sm:text-base border border-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.3)] hover:bg-emerald-900/80 hover:text-emerald-200 hover:border-emerald-300 hover:shadow-[0_0_22px_rgba(52,211,153,0.7)] active:shadow-[0_0_35px_rgba(52,211,153,1)] active:scale-95 transition-all duration-300">
+                <svg class="w-5 h-5 mr-3 text-emerald-400 group-hover:text-emerald-200 transition-colors duration-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                <span>Guardar Contacto</span>
+            </button>
+
+            <!-- COMPARTIR / QR -->
+            <button id="show-qr-btn" class="group flex items-center justify-center w-full btn-black-gray-glow font-bold py-3 px-4 rounded-xl text-sm sm:text-base">
+                 <svg class="w-5 h-5 mr-3 text-slate-400 transition-colors duration-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                 <span>Compartir / QR</span>
+            </button>
+
+            <!-- INSTRUCCIONES DE INSTALACIÓN -->
+            <button id="show-instructions-btn" class="text-center w-full text-slate-500 font-medium text-xs py-2 hover:text-red-400 transition-colors">
+                ¿Cómo instalar en mi móvil gratis?
+            </button>
+        </footer>
+    </div>
+
+    <!-- MODAL ASISTENTE IA -->
+    <div id="ai-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        <div class="modal-content bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full relative scale-95 opacity-0 flex flex-col border border-red-500/40 overflow-hidden" style="height: 85vh; max-height: 650px;">
+            <div class="p-4 bg-slate-950 text-white flex items-center justify-between border-b border-slate-800">
+                <div class="flex items-center gap-2">
+                    <svg class="w-6 h-6 text-red-500 fill-red-500 drop-shadow-[0_0_14px_rgba(239,68,68,1)] animate-pulse shrink-0" viewBox="0 0 24 24"><path d="M13 2L3 14h7v8l10-12h-7l3-8z"/></svg>
+                    <div>
+                        <h2 class="font-bold text-xs sm:text-sm leading-tight pr-2">¡HOLA!, SOY ARIA; ¿EN QUÉ PUEDO AYUDARTE?</h2>
+                        <p class="text-[11px] text-red-400/80">Powered by Gemini 3 Flash</p>
+                    </div>
+                </div>
+                <button id="close-ai-modal-btn" class="text-slate-400 hover:text-white p-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            
+            <div id="ai-chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 text-sm bg-slate-900/50">
+                <div class="bg-slate-800/80 border border-slate-700 text-slate-200 p-3.5 rounded-xl">
+                    <p class="font-semibold text-red-400 mb-1 flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-red-500 fill-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,1)] shrink-0" viewBox="0 0 24 24"><path d="M13 2L3 14h7v8l10-12h-7l3-8z"/></svg> ¡Hola! Soy el asistente virtual de ARQIA 4.
+                    </p>
+                    <p class="text-slate-300 text-xs sm:text-sm">¿Tienes una idea de proyecto o remodelación? Puedo ofrecerte una primera estimación, sugerencias de materiales y consejos antes de hablar con nosotros.</p>
+                </div>
+            </div>
+
+            <div class="p-3 bg-slate-950 border-t border-slate-800 flex flex-col gap-2">
+                <!-- SUGERENCIAS DE CONSULTA RÁPIDA -->
+                <div>
+                    <label for="ai-quick-select" class="block text-[11px] text-slate-400 font-medium px-0.5 mb-1">Sugerencias de consulta rápida:</label>
+                    <select id="ai-quick-select" class="w-full px-3 py-2 rounded-xl text-xs outline-none cursor-pointer">
+                        <option value="" disabled selected>-- Selecciona un tema de la lista --</option>
+                        <option value="Quiero información sobre la elaboración de Planos Arquitectónicos">📐 1. Planos Arquitectónicos</option>
+                        <option value="Quiero consultar por un proyecto de Remodelación de Cocina">🍳 2. Remodelación Cocina</option>
+                        <option value="Me interesa cotizar la Remodelación de Fachada">🏡 3. Remodelación Fachada</option>
+                        <option value="Quiero cotizar Renders fotorrealistas y Modelado 3D">🖼️ 4. Renders y Modelado 3D</option>
+                        <option value="Quiero información sobre Recorridos Virtuales inmersivos">🕶️ 5. Recorridos Virtuales</option>
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" id="ai-input" placeholder="Ej: ¿Cuánto cobra por un render de fachada?..." class="flex-1 px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-slate-200 focus:ring-2 focus:ring-red-500 outline-none">
+                    <button id="ai-send-btn" class="bg-black/70 text-red-500 border border-red-500/80 shadow-[0_0_10px_rgba(239,68,68,0.3)] hover:border-red-400 hover:text-red-400 hover:shadow-[0_0_20px_rgba(239,68,68,0.7)] active:scale-95 active:bg-red-600 active:text-white active:border-red-400 active:shadow-[0_0_35px_rgba(255,20,20,1)] transition-all duration-200 px-4 rounded-xl flex items-center justify-center shrink-0">
+                        <svg class="w-4 h-4 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL GENERADOR DE RENDERS -->
+    <div id="render-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        <div class="modal-content bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full relative scale-95 opacity-0 flex flex-col border border-slate-800 overflow-hidden" style="max-height: 90vh;">
+            <div class="p-4 bg-slate-950 text-white flex items-center justify-between border-b border-slate-800">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+                    <h2 class="font-bold text-base">Visualizador de Ideas & Renders IA</h2>
+                </div>
+                <button id="close-render-modal-btn" class="text-slate-400 hover:text-white p-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            
+            <div class="p-5 overflow-y-auto space-y-4 text-slate-300 text-sm">
+                <p class="text-xs text-slate-400">Crea una vista previa conceptual utilizando Google Imagen 4 / Generador Arquitectónico.</p>
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-200">Descripción del espacio o fachada:</label>
+                    <textarea id="render-prompt" rows="3" placeholder="Ej: Casa moderna de 2 plantas con fachada de piedra volcánica, hormigón visto y ventanales..." class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-sm text-slate-200"></textarea>
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-200 text-xs">Estilo Arquitectónico:</label>
+                    <select id="render-style" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 focus:ring-2 focus:ring-red-500 outline-none">
+                        <option value="modern">Moderno & Minimalista</option>
+                        <option value="brutalist">Hormigón Visto & Brutalista</option>
+                        <option value="warm">Industrial Cálido con Madera</option>
+                        <option value="mediterranean">Mediterráneo Neoclásico</option>
+                    </select>
+                </div>
+
+                <button id="generate-render-btn" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 px-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                    <span>Generar Render de Idea</span>
+                </button>
+
+                <div id="render-output-container" class="mt-4 hidden flex flex-col items-center">
+                    <div class="relative w-full aspect-video bg-slate-950 rounded-xl overflow-hidden border border-slate-800 shadow-inner flex items-center justify-center">
+                        <canvas id="render-canvas" class="w-full h-full object-cover hidden" width="600" height="340"></canvas>
+                        <img id="render-output-img" class="w-full h-full object-cover hidden" alt="Render IA Generado">
+                        <div id="render-badge" class="hidden absolute bottom-2 left-2 right-2 bg-slate-950/85 backdrop-blur-md border border-red-500/40 p-2.5 rounded-xl text-left text-[11px] text-slate-200 shadow-lg z-10">
+                            <span id="render-badge-style" class="font-bold text-red-400 uppercase tracking-wider block text-[10px]"></span>
+                            <span id="render-badge-prompt" class="text-slate-300 truncate block text-xs"></span>
+                        </div>
+                        <div id="render-loader" class="flex flex-col items-center gap-2 p-6 text-slate-400">
+                            <div class="w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                            <span class="text-xs font-medium">Sintetizando arquitectura con IA...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL REGISTRO DE PLATAFORMA -->
+    <div id="newsletter-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        <div class="modal-content bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full relative scale-95 opacity-0 flex flex-col border border-red-500/40 overflow-hidden" style="max-height: 90vh;">
+            <div class="p-4 bg-slate-950 text-white flex items-center justify-between border-b border-slate-800">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                    <div>
+                        <h2 class="font-bold text-base leading-tight">REGISTRO DE PLATAFORMA</h2>
+                        <p class="text-[10px] text-red-400">Únete a la comunidad de ARQIENTES y obtén $1,000 MXN de bono</p>
+                    </div>
+                </div>
+                <button id="close-newsletter-modal-btn" class="text-slate-400 hover:text-white p-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            
+            <form id="newsletter-form" class="p-5 overflow-y-auto space-y-3 text-slate-300 text-sm">
+                <p class="text-xs text-slate-400">Crea tu cuenta como ARQIENTE para obtener un bono exclusivo de $1,000 MXN de descuento en tu cotización y acceso a la plataforma de ARQIA 4.</p>
+                
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-200 text-xs">Nombre completo:</label>
+                    <input type="text" id="subscriber-name" required placeholder="Ej: María López" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-xs text-slate-200">
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-200 text-xs">Nombre de usuario:</label>
+                    <input type="text" id="subscriber-username" required placeholder="Ej: marialopez_arq" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-xs text-slate-200">
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-200 text-xs">Correo electrónico:</label>
+                    <input type="email" id="subscriber-email" required placeholder="correo@ejemplo.com" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-xs text-slate-200">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold mb-1 text-slate-200 text-xs">Contraseña:</label>
+                        <input type="password" id="subscriber-password" required placeholder="••••••••" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-xs text-slate-200">
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1 text-slate-200 text-xs">Confirmar contraseña:</label>
+                        <input type="password" id="subscriber-confirm-password" required placeholder="••••••••" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-xs text-slate-200">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-200 text-xs">Tipo de perfil:</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="profile_type" value="cliente" checked class="peer sr-only">
+                            <div class="p-2.5 bg-emerald-950/40 text-emerald-200 border border-emerald-400 rounded-xl text-center peer-checked:border-emerald-300 peer-checked:bg-emerald-900/80 peer-checked:text-white peer-checked:shadow-[0_0_15px_rgba(52,211,153,0.8)] hover:bg-emerald-900/50 transition-all duration-300 flex items-center justify-center gap-1.5">
+                                <span class="text-base">🏡</span>
+                                <span class="font-bold text-xs">Cliente</span>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="profile_type" value="estudiante" class="peer sr-only">
+                            <div class="p-2.5 bg-red-950/40 text-red-200 border border-red-400 rounded-xl text-center peer-checked:border-red-300 peer-checked:bg-red-900/80 peer-checked:text-white peer-checked:shadow-[0_0_15px_rgba(239,68,68,0.8)] hover:bg-red-900/50 transition-all duration-300 flex items-center justify-center gap-1.5">
+                                <span class="text-base">🎓</span>
+                                <span class="font-bold text-xs">Estudiante</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="newsletter-error" class="hidden p-2.5 bg-red-950/80 border border-red-500/50 rounded-xl text-red-300 text-xs text-center font-medium"></div>
+
+                <div id="newsletter-success" class="hidden p-2.5 bg-emerald-950/80 border border-emerald-500/50 rounded-xl text-emerald-300 text-xs text-center font-medium">
+                    ✓ ¡Cuenta creada con éxito! Redirigiendo a tu panel ARQIENTE...
+                </div>
+
+                <button type="submit" id="submit-newsletter-btn" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 px-4 rounded-xl border border-red-400 shadow-[0_0_14px_rgba(239,68,68,0.4)] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 mt-2">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                    <span>Crear Cuenta & Reclamar $1,000 MXN de Bono</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- NUEVO NAVEGADOR DE PLATAFORMA ARQIA 4 (HUB DE VIDEOS Y RECURSOS) -->
+    <div id="platform-hub-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-lg flex items-center justify-center p-2 sm:p-4 z-50">
+        <div class="modal-content bg-slate-900 rounded-2xl shadow-2xl max-w-2xl w-full relative scale-95 opacity-0 flex flex-col border border-red-500/50 overflow-hidden" style="height: 92vh; max-height: 820px;">
+            
+            <!-- HEADER DE NAVEGADOR CON BANNER ARQIENTES Y BONO $1000 MXN -->
+            <div class="p-4 bg-slate-950 text-white flex flex-col border-b border-slate-800 gap-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-full bg-red-600/20 border border-red-500/60 flex items-center justify-center text-red-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <div>
+                            <h2 class="font-extrabold text-sm sm:text-base leading-tight">Descubre tu Experiencia ARQIA 4</h2>
+                            <p id="platform-user-greeting" class="text-xs text-red-400 font-medium">Tu acceso al código del diseño inteligente</p>
+                        </div>
+                    </div>
+                    <button id="close-platform-hub-btn" class="text-slate-400 hover:text-white p-1">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <!-- BANNER BONO EXCLUSIVO ARQIENTES $1,000 MXN -->
+                <div class="bg-gradient-to-r from-red-950/90 via-slate-950 to-emerald-950/80 border-[0.5px] border-white/80 p-3.5 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-[0_0_18px_rgba(255,255,255,0.3)]">
+                    <div class="flex items-center gap-3">
+                        <div class="shrink-0 bg-emerald-500/20 text-emerald-400 p-2.5 rounded-xl border border-emerald-500/40 shadow-[0_0_14px_rgba(52,211,153,0.4)] flex items-center justify-center">
+                            <svg class="w-6 h-6 text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 16l-2-9 5 3 4-5 4 5 5-3-2 9H5z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 19h12M12 14v.01" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-xs text-white font-extrabold flex items-center gap-1.5 flex-wrap">
+                                <span>¡Felicidades! Ya eres parte de los <span class="text-emerald-400 font-black tracking-wide">ARQIENTES</span></span>
+                                <span class="bg-red-600 text-white text-[9px] uppercase px-1.5 py-0.5 rounded font-bold tracking-wider">Acceso Exclusivo para ARQIENTES</span>
+                            </p>
+                            <p class="text-[11px] text-slate-300 leading-tight mt-0.5">
+                                “Solicitar Cotización” en tu ficha digital. Tu proyecto merece más: desbloquea la experiencia ARQIA.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="shrink-0 w-full sm:w-auto bg-emerald-950/90 border border-emerald-400 text-emerald-300 font-bold px-3.5 py-2 rounded-xl text-xs shadow-[0_0_15px_rgba(52,211,153,0.4)] flex items-center justify-center gap-1.5 whitespace-nowrap">
+                        <span class="text-sm">🎁</span>
+                        <span>Activar mi Token y comenzar</span>
+                    </div>
+                </div>
+
+                <!-- SELECTOR DE SECCIÓN PLATAFORMA (CLIENTE VS RECURSOS) -->
+                <div class="flex items-center gap-2 pt-1 border-t border-slate-800">
+                    <button id="tab-client-mode" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 bg-red-600/80 text-white shadow-[0_0_12px_rgba(239,68,68,0.4)] border border-red-400">
+                        <span>📋</span>
+                        <span>Token de Proyecto (Cliente)</span>
+                    </button>
+                    <button id="tab-resources-mode" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 bg-slate-800 text-slate-300 hover:text-white border border-slate-700">
+                        <span>🎬</span>
+                        <span>Tips & Recursos 3D</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- CONTENIDO PRINCIPAL: NAVEGADOR Y RECURSOS -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-6 bg-slate-900/60">
+
+                <!-- CONTENEDOR MODO CLIENTE: CUESTIONARIO DE COTIZACIÓN -->
+                <div id="client-quote-container" class="space-y-4">
+                    <div class="bg-gradient-to-br from-red-950/40 via-slate-950 to-slate-900 border border-red-500/50 p-4 rounded-2xl shadow-xl">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <div>
+                                <h3 class="font-extrabold text-white text-base flex items-center gap-2">
+                                    <span class="text-red-500">🏡</span> Tú Token de Proyecto
+                                </h3>
+                                <p class="text-xs text-slate-400 mt-0.5">“Tu idea merece convertirse en un proyecto arquitectónico único. Completa tus datos y empieza a diseñar con nosotros.”</p>
+                            </div>
+                            <span id="quote-step-indicator" class="text-xs font-mono bg-red-950 text-red-400 border border-red-500/40 px-2.5 py-1 rounded-full shrink-0 font-bold">Paso 1 de 4</span>
+                        </div>
+
+                        <!-- PASO 1: DATOS DEL CLIENTE -->
+                        <div id="quote-step-1" class="quote-step-block pt-4 space-y-3">
+                            <h4 class="font-bold text-red-400 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                                <span>👤</span> 1. Datos del Cliente
+                            </h4>
+                            <div class="space-y-2.5">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-200 mb-1">Nombre completo: <span class="text-red-400">*</span></label>
+                                    <input type="text" id="quote-client-name" placeholder="Ej: Arq. Sofía Mendoza" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 focus:ring-2 focus:ring-red-500 outline-none">
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-200 mb-1">Teléfono / WhatsApp: <span class="text-red-400">*</span></label>
+                                        <input type="tel" id="quote-client-phone" placeholder="Ej: +52 477 123 4567" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 focus:ring-2 focus:ring-red-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-200 mb-1">Correo electrónico: <span class="text-red-400">*</span></label>
+                                        <input type="email" id="quote-client-email" placeholder="correo@ejemplo.com" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 focus:ring-2 focus:ring-red-500 outline-none">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-200 mb-1">Empresa / Despacho (opcional):</label>
+                                    <input type="text" id="quote-client-company" placeholder="Ej: Constructora Innovación S.A." class="w-full px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 focus:ring-2 focus:ring-red-500 outline-none">
+                                </div>
+                            </div>
+                            <button type="button" id="next-step-1-btn" class="w-full bg-red-600/80 hover:bg-red-500/90 text-white font-bold py-2.5 rounded-xl text-xs transition-all shadow-md mt-2 flex items-center justify-center gap-1.5">
+                                <span>Continuar y desbloquear mi propuesta personalizada</span> &rarr;
+                            </button>
+                        </div>
+
+                        <!-- PASO 2: INFORMACIÓN DEL PROYECTO -->
+                        <div id="quote-step-2" class="quote-step-block hidden pt-4 space-y-3">
+                            <h4 class="font-bold text-red-400 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                                <span>📌</span> 2. Información del Proyecto
+                            </h4>
+                            <div class="space-y-2.5">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-200 mb-1">Nombre del proyecto: <span class="text-red-400">*</span></label>
+                                    <input type="text" id="quote-project-name" placeholder="Ej: Residencial Las Palmas / Remodelación Terraza" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 focus:ring-2 focus:ring-red-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-200 mb-1">Ubicación (dirección o ciudad): <span class="text-red-400">*</span></label>
+                                    <input type="text" id="quote-project-location" placeholder="Ej: León, Guanajuato / Querétaro, Qro." class="w-full px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 focus:ring-2 focus:ring-red-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-200 mb-1">Tipo de proyecto:</label>
+                                    <select id="quote-project-type" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 focus:ring-2 focus:ring-red-500 outline-none">
+                                        <option value="Residencial (Habitacional / Villa)">🏡 Residencial (Habitacional / Villa)</option>
+                                        <option value="Comercial (Locales / Plazas / Restaurantes)">🏢 Comercial (Locales / Plazas / Restaurantes)</option>
+                                        <option value="Institucional / Corporativo">🏛️ Institucional / Corporativo</option>
+                                        <option value="Remodelación / Fachada / Cocina">🍳 Remodelación / Fachada / Interiores</option>
+                                        <option value="Industrial / Desarrollo Urbano">🏗️ Industrial / Desarrollo Urbano</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 mt-2">
+                                <button type="button" class="back-step-btn w-1/3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl text-xs transition-all" data-target="1">&larr; Atrás</button>
+                                <button type="button" id="next-step-2-btn" class="w-2/3 bg-red-600/80 hover:bg-red-500/90 text-white font-bold py-2.5 rounded-xl text-xs transition-all shadow-md">Continuar al Alcance del Trabajo &rarr;</button>
+                            </div>
+                        </div>
+
+                        <!-- PASO 3: ALCANCE DEL TRABAJO -->
+                        <div id="quote-step-3" class="quote-step-block hidden pt-4 space-y-3.5">
+                            <h4 class="font-bold text-red-400 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                                <span>🛠️</span> 3. Alcance del Trabajo
+                            </h4>
+                            
+                            <!-- Planos Arquitectónicos Requeridos -->
+                            <div class="space-y-1.5">
+                                <span class="block text-xs font-bold text-slate-200">📐 Planos Arquitectónicos Requeridos:</span>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                                    <label class="p-2.5 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 cursor-pointer hover:border-red-500/60 transition-all">
+                                        <input type="checkbox" value="Plantas Arquitectónicas" class="quote-scope-checkbox text-red-600 focus:ring-red-500 h-3.5 w-3.5 rounded bg-slate-900 border-slate-700" checked>
+                                        <span class="text-slate-300">Plantas</span>
+                                    </label>
+                                    <label class="p-2.5 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 cursor-pointer hover:border-red-500/60 transition-all">
+                                        <input type="checkbox" value="Cortes Técnicos" class="quote-scope-checkbox text-red-600 focus:ring-red-500 h-3.5 w-3.5 rounded bg-slate-900 border-slate-700" checked>
+                                        <span class="text-slate-300">Cortes</span>
+                                    </label>
+                                    <label class="p-2.5 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 cursor-pointer hover:border-red-500/60 transition-all">
+                                        <input type="checkbox" value="Fachadas Arquitectónicas" class="quote-scope-checkbox text-red-600 focus:ring-red-500 h-3.5 w-3.5 rounded bg-slate-900 border-slate-700" checked>
+                                        <span class="text-slate-300">Fachadas</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Planos de Instalaciones -->
+                            <div class="space-y-1.5">
+                                <span class="block text-xs font-bold text-slate-200">⚡ Planos de Instalaciones Requeridas:</span>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]">
+                                    <label class="p-2 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 cursor-pointer hover:border-red-500/60 transition-all">
+                                        <input type="checkbox" value="Sanitarias" class="quote-scope-checkbox text-red-600 focus:ring-red-500 h-3.5 w-3.5 rounded bg-slate-900 border-slate-700">
+                                        <span class="text-slate-300">Sanitarias</span>
+                                    </label>
+                                    <label class="p-2 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 cursor-pointer hover:border-red-500/60 transition-all">
+                                        <input type="checkbox" value="Hidráulicas" class="quote-scope-checkbox text-red-600 focus:ring-red-500 h-3.5 w-3.5 rounded bg-slate-900 border-slate-700">
+                                        <span class="text-slate-300">Hidráulicas</span>
+                                    </label>
+                                    <label class="p-2 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 cursor-pointer hover:border-red-500/60 transition-all">
+                                        <input type="checkbox" value="Eléctricas" class="quote-scope-checkbox text-red-600 focus:ring-red-500 h-3.5 w-3.5 rounded bg-slate-900 border-slate-700">
+                                        <span class="text-slate-300">Eléctricas</span>
+                                    </label>
+                                    <label class="p-2 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 cursor-pointer hover:border-red-500/60 transition-all">
+                                        <input type="checkbox" value="Pluviales" class="quote-scope-checkbox text-red-600 focus:ring-red-500 h-3.5 w-3.5 rounded bg-slate-900 border-slate-700">
+                                        <span class="text-slate-300">Pluviales</span>
+                                    </label>
+                                    <label class="p-2 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 cursor-pointer hover:border-red-500/60 transition-all">
+                                        <input type="checkbox" value="Voz y Datos" class="quote-scope-checkbox text-red-600 focus:ring-red-500 h-3.5 w-3.5 rounded bg-slate-900 border-slate-700">
+                                        <span class="text-slate-300">Voz y Datos</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Modelado 3D, Renders & Recorridos -->
+                            <div class="space-y-1.5">
+                                <span class="block text-xs font-bold text-slate-200">🖼️ Visualización & 3D:</span>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px]">
+                                    <label class="p-2 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 cursor-pointer hover:border-red-500/60 transition-all">
+                                        <input type="checkbox" value="Modelado 3D" class="quote-scope-checkbox text-red-600 focus:ring-red-500 h-3.5 w-3.5 rounded bg-slate-900 border-slate-700" checked>
+                                        <span class="text-slate-300">Modelado 3D</span>
+                                    </label>
+                                    <label class="p-2 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 cursor-pointer hover:border-red-500/60 transition-all">
+                                        <input type="checkbox" value="Renders Fotorrealistas" class="quote-scope-checkbox text-red-600 focus:ring-red-500 h-3.5 w-3.5 rounded bg-slate-900 border-slate-700" checked>
+                                        <span class="text-slate-300">Renders</span>
+                                    </label>
+                                    <label class="p-2 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 cursor-pointer hover:border-red-500/60 transition-all">
+                                        <input type="checkbox" value="Recorridos Virtuales 360°" class="quote-scope-checkbox text-red-600 focus:ring-red-500 h-3.5 w-3.5 rounded bg-slate-900 border-slate-700">
+                                        <span class="text-slate-300">Recorridos VR</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-2 mt-2">
+                                <button type="button" class="back-step-btn w-1/3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl text-xs transition-all" data-target="2">&larr; Atrás</button>
+                                <button type="button" id="next-step-3-btn" class="w-2/3 bg-red-600/80 hover:bg-red-500/90 text-white font-bold py-2.5 rounded-xl text-xs transition-all shadow-md">Continuar a Tiempos y Detalles &rarr;</button>
+                            </div>
+                        </div>
+
+                        <!-- PASO 3: ALCANCE DEL TRABAJO -->
+                        <div id="quote-step-3" class="quote-step-block hidden pt-4 space-y-3.5">
+                            <h4 class="font-bold text-red-400 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                                <span>🛠️</span> 3. Alcance del Trabajo
+                            </h4>
+                            
+                            <!-- Planos Arquitectónicos Requeridos -->
+                            <div class="space-y-1.5">
+                                <span class="block text-xs font-bold text-slate-200">📐 Planos Arquitectónicos Requeridos:</span>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                                    <label class="p-2.5 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 cursor-pointer hover:border-red-500/60 transition-all">
+                                        <input type="checkbox" value="Plantas Arquitectónicas" class="quote-scope-checkbox text-red-600 focus:ring-red-500 h-3.5 w-3.5 rounded bg-slate-900 border-slate-700" checked>
+                                        <span class="text-slate-300">Plantas</span>
+                                    </label>
+                                    <label class="p-2.5 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 cursor-pointer hover:border-red-500/60 transition-all">
+                                        <input type="checkbox" value="Cortes Técnicos" class="quote-scope-checkbox text-red-600 focus:ring-red-500 h-3.5 w-3.5 rounded bg-slate-900 border-slate-700" checked>
+                                        <span class="text-slate-300">Cortes</span>
+                                    </label>
+                                    <label class="p-2.5 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 cursor-pointer hover:border-red-500/60 transition-all">
+                                        <input type="checkbox" value="Fachadas Arquitectónicas" class="quote-scope-checkbox text-red-600 focus:ring-red-500 h-3.5 w-3.5 rounded bg-slate-900 border-slate-700" checked>
+                                        <span class="text-slate-300">Fachadas</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Planos de Instalaciones -->
+                            <div class="space-y-1.5">
+                                <span class="block text-xs font-bold text-slate-200">⚡ Planos de Instalaciones Requeridas:</span>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]">
+                                    <label class="p-2 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 cursor-pointer hover:border-red-500/60 transition-all">
+                                        <input type="checkbox" value="Sanitarias" class="quote-scope-checkbox text-red-600 focus:ring-red-500 h-3.5 w-3.5 rounded bg-slate-900 border-slate-700">
+                                        <span class="text-slate-300">Sanitarias</span>
+                                    </label>
+                                    <label class="p-2 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 cursor-pointer hover:border-red-500/60 transition-all">
+                                        <input type="checkbox" value="Hidráulicas" class="quote-scope-checkbox text-red-600 focus:ring-red-500 h-3.5 w-3.5 rounded bg-slate-900 border-slate-700">
+                                        <span class="text-slate-300">Hidráulicas</span>
+                                    </label>
+                                    <label class="p-2 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 cursor-pointer hover:border-red-500/60 transition-all">
+                                        <input type="checkbox" value="Eléctricas" class="quote-scope-checkbox text-red-600 focus:ring-red-500 h-3.5 w-3.5 rounded bg-slate-900 border-slate-700">
+                                        <span class="text-slate-300">Eléctricas</span>
+                                    </label>
+                                    <label class="p-2 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 cursor-pointer hover:border-red-500/60 transition-all">
+                                        <input type="checkbox" value="Pluviales" class="quote-scope-checkbox text-red-600 focus:ring-red-500 h-3.5 w-3.5 rounded bg-slate-900 border-slate-700">
+                                        <span class="text-slate-300">Pluviales</span>
+                                    </label>
+                                    <label class="p-2 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 cursor-pointer hover:border-red-500/60 transition-all">
+                                        <input type="checkbox" value="Voz y Datos" class="quote-scope-checkbox text-red-600 focus:ring-red-500 h-3.5 w-3.5 rounded bg-slate-900 border-slate-700">
+                                        <span class="text-slate-300">Voz y Datos</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Modelado 3D, Renders & Recorridos -->
+                            <div class="space-y-1.5">
+                                <span class="block text-xs font-bold text-slate-200">🖼️ Visualización & 3D:</span>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px]">
+                                    <label class="p-2 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 cursor-pointer hover:border-red-500/60 transition-all">
+                                        <input type="checkbox" value="Modelado 3D" class="quote-scope-checkbox text-red-600 focus:ring-red-500 h-3.5 w-3.5 rounded bg-slate-900 border-slate-700" checked>
+                                        <span class="text-slate-300">Modelado 3D</span>
+                                    </label>
+                                    <label class="p-2 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 cursor-pointer hover:border-red-500/60 transition-all">
+                                        <input type="checkbox" value="Renders Fotorrealistas" class="quote-scope-checkbox text-red-600 focus:ring-red-500 h-3.5 w-3.5 rounded bg-slate-900 border-slate-700" checked>
+                                        <span class="text-slate-300">Renders</span>
+                                    </label>
+                                    <label class="p-2 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 cursor-pointer hover:border-red-500/60 transition-all">
+                                        <input type="checkbox" value="Recorridos Virtuales 360°" class="quote-scope-checkbox text-red-600 focus:ring-red-500 h-3.5 w-3.5 rounded bg-slate-900 border-slate-700">
+                                        <span class="text-slate-300">Recorridos VR</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-2 mt-2">
+                                <button type="button" class="back-step-btn w-1/3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl text-xs transition-all" data-target="2">&larr; Atrás</button>
+                                <button type="button" id="next-step-3-btn" class="w-2/3 bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 rounded-xl text-xs transition-all shadow-md">Continuar a Tiempos y Detalles &rarr;</button>
+                            </div>
+                        </div>
+
+                        <!-- PASO 4: TIEMPO Y DETALLES ADICIONALES -->
+                        <div id="quote-step-4" class="quote-step-block hidden pt-4 space-y-3">
+                            <h4 class="font-bold text-red-400 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                                <span>📅</span> 4. Tiempos & Detalles Adicionales
+                            </h4>
+                            <div>
+                                <label class="block font-bold text-slate-200 text-xs mb-1.5">¿Cuándo planeas iniciar el proyecto?</label>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                    <button type="button" class="quote-option-btn p-2.5 bg-slate-900 hover:bg-red-950/60 border border-slate-700 hover:border-red-500 rounded-xl text-center transition-all group" data-field="timeline" data-value="De Inmediato (1-2 semanas)">
+                                        <div class="font-bold text-xs text-white group-hover:text-red-400">⚡ De Inmediato</div>
+                                        <div class="text-[10px] text-slate-400">1 a 2 semanas</div>
+                                    </button>
+                                    <button type="button" class="quote-option-btn p-2.5 bg-slate-900 hover:bg-red-950/60 border border-slate-700 hover:border-red-500 rounded-xl text-center transition-all group" data-field="timeline" data-value="A mediano plazo (1-3 meses)">
+                                        <div class="font-bold text-xs text-white group-hover:text-red-400">📅 Mediano Plazo</div>
+                                        <div class="text-[10px] text-slate-400">1 a 3 meses</div>
+                                    </button>
+                                    <button type="button" class="quote-option-btn p-2.5 bg-slate-900 hover:bg-red-950/60 border border-slate-700 hover:border-red-500 rounded-xl text-center transition-all group" data-field="timeline" data-value="Solo cotizando / Planeación">
+                                        <div class="font-bold text-xs text-white group-hover:text-red-400">🔍 Solo Cotizando</div>
+                                        <div class="text-[10px] text-slate-400">Planeación futura</div>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="pt-2">
+                                <label class="block font-semibold mb-1 text-slate-200 text-xs">Detalles adicionales de tu proyecto (opcional):</label>
+                                <textarea id="quote-notes-input" rows="3" placeholder="Ej: Terreno de 8x20m, preferencia por iluminación natural cálida, fachadas de piedra volcánica..." class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 focus:ring-2 focus:ring-red-500 outline-none"></textarea>
+                            </div>
+
+                            <div class="flex gap-2 mt-2">
+                                <button type="button" class="back-step-btn w-1/3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl text-xs transition-all" data-target="3">&larr; Atrás</button>
+                                <button type="button" id="finish-quote-btn" class="w-2/3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs transition-all shadow-md flex items-center justify-center gap-1.5">
+                                    <span>✓ Finalizar Token de Proyecto</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- PASO FINAL: RESUMEN DE COTIZACIÓN Y BOTÓN WHATSAPP -->
+                        <div id="quote-step-summary" class="quote-step-block hidden pt-4 space-y-4">
+                            <div class="bg-slate-950 border border-emerald-500/40 p-3.5 rounded-xl text-xs space-y-2 text-slate-200">
+                                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                                    <span class="font-bold text-emerald-400 text-sm flex items-center gap-1.5">
+                                        <span>✓ Resumen de Token de Proyecto</span>
+                                    </span>
+                                    <button type="button" id="reset-quote-btn" class="text-[10px] text-slate-400 hover:text-white underline">Reiniciar respuestas</button>
+                                </div>
+                                <div class="space-y-1.5 text-slate-300">
+                                    <p><strong class="text-white">Cliente:</strong> <span id="summary-client" class="text-red-400">-</span></p>
+                                    <p><strong class="text-white">Contacto:</strong> <span id="summary-contact" class="text-red-400">-</span></p>
+                                    <p><strong class="text-white">Proyecto:</strong> <span id="summary-project" class="text-red-400">-</span></p>
+                                    <p><strong class="text-white">Ubicación:</strong> <span id="summary-location" class="text-red-400">-</span></p>
+                                    <p><strong class="text-white">Alcance Solicitado:</strong> <span id="summary-scope" class="text-red-400">-</span></p>
+                                    <p><strong class="text-white">Tiempo de inicio:</strong> <span id="summary-timeline" class="text-red-400">-</span></p>
+                                </div>
+                                <div id="summary-notes-box" class="pt-1.5 text-[11px] text-slate-400 border-t border-slate-900">
+                                    <strong class="text-slate-300">Detalles adicionales:</strong> <span id="summary-notes">-</span>
+                                </div>
+                                <div class="p-2 bg-emerald-950/70 border border-emerald-500/40 rounded-lg text-emerald-300 font-medium text-[11px] flex items-center justify-between">
+                                    <span>🎁 Beneficio ARQIENTES:</span>
+                                    <strong class="text-emerald-200 font-bold">$1,000 MXN de descuento aplicado</strong>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row gap-2.5">
+                                <button id="download-token-pdf-btn" type="button" class="flex-1 inline-flex items-center justify-center gap-2 bg-red-950/90 hover:bg-red-900 text-red-200 font-extrabold py-3 px-4 rounded-xl text-xs sm:text-sm transition-all duration-300 border border-red-500/80 shadow-[0_0_15px_rgba(239,68,68,0.4)] active:scale-95">
+                                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    Descargar PDF del Token
+                                </button>
+
+                                <button id="send-quote-wa-btn" type="button" class="flex-1 inline-flex items-center justify-center gap-2 bg-emerald-950/90 text-emerald-300 font-extrabold py-3 px-4 rounded-xl text-xs sm:text-sm transition-all duration-300 border border-emerald-400 shadow-[0_0_20px_rgba(52,211,153,0.5)] hover:bg-emerald-900 hover:text-emerald-100 hover:shadow-[0_0_30px_rgba(52,211,153,0.85)] active:scale-95">
+                                    <svg class="w-5 h-5 shrink-0 fill-current" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg>
+                                    Enviar por WA con PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL REPRODUCTOR DE VIDEO -->
+    <div id="video-player-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        <div class="modal-content bg-slate-900 rounded-2xl shadow-2xl max-w-xl w-full relative scale-95 opacity-0 flex flex-col border border-red-500/40 overflow-hidden">
+            <div class="p-4 bg-slate-950 text-white flex items-center justify-between border-b border-slate-800">
+                <div class="flex items-center gap-2">
+                    <span id="player-software-tag" class="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">Software</span>
+                    <h3 id="player-video-title" class="font-bold text-xs sm:text-sm truncate">Reproduciendo Tutorial</h3>
+                </div>
+                <button id="close-video-player-btn" class="text-slate-400 hover:text-white p-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="relative aspect-video bg-black flex items-center justify-center">
+                <div class="p-6 text-center text-slate-400 space-y-2">
+                    <svg class="w-12 h-12 text-red-500 mx-auto animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <p id="player-status-msg" class="text-xs font-semibold text-white">Cargando lección de la plataforma...</p>
+                    <p class="text-[11px] text-slate-500">Beneficio activo de tu prueba 24 horas ARQIA 4</p>
+                </div>
+            </div>
+            <div class="p-4 bg-slate-950 border-t border-slate-800 flex justify-between items-center text-xs text-slate-400">
+                <span>Plataforma ARQIA PRO</span>
+                <button id="close-player-bottom-btn" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-1.5 px-3 rounded-lg">Cerrar Reproductor</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SERVICIOS -->
+    <div id="services-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        <div class="modal-content bg-slate-900 rounded-2xl shadow-2xl max-w-lg w-full relative scale-95 opacity-0 flex flex-col border border-red-500/40" style="height: 90vh; max-height: 750px;">
+            <div class="p-6 border-b border-slate-800 flex-shrink-0 relative bg-slate-950 rounded-t-2xl">
+                <h2 class="text-2xl font-bold text-white text-center">Servicios Arquitectónicos</h2>
+                <p class="text-center text-slate-400 text-sm mt-1">Soluciones integrales de diseño y visualización para tus proyectos.</p>
+                <button id="close-services-modal-btn" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            
+            <div class="overflow-y-auto p-6 space-y-4 flex-1">
+                <!-- PESTAÑA DESPLEGABLE: SERVICIOS PRINCIPALES -->
+                <div class="border border-red-500/40 rounded-2xl overflow-hidden bg-slate-950/80 shadow-[0_0_20px_rgba(239,68,68,0.15)] transition-all">
+                    <button id="toggle-main-services-btn" class="w-full flex items-center justify-between p-4 bg-slate-900/90 text-white font-bold text-base sm:text-lg hover:bg-slate-800 transition-all border-b border-slate-800/80 group">
+                        <span class="flex items-center gap-2 text-red-400 group-hover:text-red-300">
+                            <svg class="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                            Servicios Principales
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs bg-red-950 text-red-400 border border-red-500/30 px-2 py-0.5 rounded-full font-semibold">5 servicios</span>
+                            <svg id="services-chevron" class="w-5 h-5 text-red-400 transition-transform duration-300 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                    </button>
+
+                    <div id="main-services-content" class="p-4 space-y-4 border-t border-slate-800/80 transition-all">
+                        <!-- 1. Planos arquitectónicos -->
+                        <div class="service-card bg-slate-900/80 border-2 border-red-500/80 shadow-[0_0_15px_rgba(239,68,68,0.4)] p-4 rounded-xl flex flex-col sm:flex-row items-center gap-4 cursor-pointer hover:bg-red-600/20 hover:border-red-400 hover:shadow-[0_0_22px_rgba(239,68,68,0.6)] transition-all duration-300 active:bg-red-600/30">
+                            <img src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=200&q=70" alt="Planos arquitectónicos" class="w-full sm:w-24 h-24 rounded-lg object-cover shrink-0" onerror="this.onerror=null;this.src='https://placehold.co/96x96/EF4444/FFFFFF?text=PLANOS';">
+                            <div class="text-center sm:text-left">
+                                <h3 class="font-bold text-white text-lg">Planos arquitectónicos</h3>
+                                <p class="text-slate-300 text-sm mt-1">Elaboración de plantas, cortes y fachadas con precisión técnica y estética.</p>
+                                <a id="service-wa-1" href="https://wa.me/524776592182?text=Hola,%20quisiera%20consultar%20por%20Planos%20arquitectónicos." target="_blank" class="text-sm font-semibold text-red-400 mt-2 inline-block hover:underline">Consultar Servicio &rarr;</a>
+                            </div>
+                        </div>
+
+                        <!-- 2. Representación gráfica -->
+                        <div class="service-card bg-slate-900/80 border-2 border-red-500/80 shadow-[0_0_15px_rgba(239,68,68,0.4)] p-4 rounded-xl flex flex-col sm:flex-row items-center gap-4 cursor-pointer hover:bg-red-600/20 hover:border-red-400 hover:shadow-[0_0_22px_rgba(239,68,68,0.6)] transition-all duration-300 active:bg-red-600/30">
+                            <img src="https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=200&q=70" alt="Representación gráfica" class="w-full sm:w-24 h-24 rounded-lg object-cover shrink-0" onerror="this.onerror=null;this.src='https://placehold.co/96x96/EF4444/FFFFFF?text=GRAFICO';">
+                            <div class="text-center sm:text-left">
+                                <h3 class="font-bold text-white text-lg">Representación gráfica</h3>
+                                <p class="text-slate-300 text-sm mt-1">Documentación visual clara para proyectos de construcción y diseño.</p>
+                                <a id="service-wa-2" href="https://wa.me/524776592182?text=Hola,%20quisiera%20consultar%20por%20Representación%20gráfica." target="_blank" class="text-sm font-semibold text-red-400 mt-2 inline-block hover:underline">Consultar Servicio &rarr;</a>
+                            </div>
+                        </div>
+
+                        <!-- 3. Modelado 3D -->
+                        <div class="service-card bg-slate-900/80 border-2 border-red-500/80 shadow-[0_0_15px_rgba(239,68,68,0.4)] p-4 rounded-xl flex flex-col sm:flex-row items-center gap-4 cursor-pointer hover:bg-red-600/20 hover:border-red-400 hover:shadow-[0_0_22px_rgba(239,68,68,0.6)] transition-all duration-300 active:bg-red-600/30">
+                            <img src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=200&q=70" alt="Modelado 3D" class="w-full sm:w-24 h-24 rounded-lg object-cover shrink-0" onerror="this.onerror=null;this.src='https://placehold.co/96x96/EF4444/FFFFFF?text=3D';">
+                            <div class="text-center sm:text-left">
+                                <h3 class="font-bold text-white text-lg">Modelado 3D</h3>
+                                <p class="text-slate-300 text-sm mt-1">Creación de modelos tridimensionales que permiten visualizar el proyecto antes de su ejecución.</p>
+                                <a id="service-wa-3" href="https://wa.me/524776592182?text=Hola,%20quisiera%20consultar%20por%20Modelado%203D." target="_blank" class="text-sm font-semibold text-red-400 mt-2 inline-block hover:underline">Consultar Servicio &rarr;</a>
+                            </div>
+                        </div>
+
+                        <!-- 4. Renders fotorrealistas -->
+                        <div class="service-card bg-slate-900/80 border-2 border-red-500/80 shadow-[0_0_15px_rgba(239,68,68,0.4)] p-4 rounded-xl flex flex-col sm:flex-row items-center gap-4 cursor-pointer hover:bg-red-600/20 hover:border-red-400 hover:shadow-[0_0_22px_rgba(239,68,68,0.6)] transition-all duration-300 active:bg-red-600/30">
+                            <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=200&q=70" alt="Renders fotorrealistas" class="w-full sm:w-24 h-24 rounded-lg object-cover shrink-0" onerror="this.onerror=null;this.src='https://placehold.co/96x96/EF4444/FFFFFF?text=RENDER';">
+                            <div class="text-center sm:text-left">
+                                <h3 class="font-bold text-white text-lg">Renders fotorrealistas</h3>
+                                <p class="text-slate-300 text-sm mt-1">Imágenes digitales de alta calidad que transmiten la esencia del diseño.</p>
+                                <a id="service-wa-4" href="https://wa.me/524776592182?text=Hola,%20quisiera%20consultar%20por%20Renders%20fotorrealistas." target="_blank" class="text-sm font-semibold text-red-400 mt-2 inline-block hover:underline">Consultar Servicio &rarr;</a>
+                            </div>
+                        </div>
+
+                        <!-- 5. Recorridos virtuales -->
+                        <div class="service-card bg-slate-900/80 border-2 border-red-500/80 shadow-[0_0_15px_rgba(239,68,68,0.4)] p-4 rounded-xl flex flex-col sm:flex-row items-center gap-4 cursor-pointer hover:bg-red-600/20 hover:border-red-400 hover:shadow-[0_0_22px_rgba(239,68,68,0.6)] transition-all duration-300 active:bg-red-600/30">
+                            <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=200&q=70" alt="Recorridos virtuales" class="w-full sm:w-24 h-24 rounded-lg object-cover shrink-0" onerror="this.onerror=null;this.src='https://placehold.co/96x96/EF4444/FFFFFF?text=VR';">
+                            <div class="text-center sm:text-left">
+                                <h3 class="font-bold text-white text-lg">Recorridos virtuales</h3>
+                                <p class="text-slate-300 text-sm mt-1">Experiencias inmersivas para explorar espacios arquitectónicos de manera interactiva.</p>
+                                <a id="service-wa-5" href="https://wa.me/524776592182?text=Hola,%20quisiera%20consultar%20por%20Recorridos%20virtuales." target="_blank" class="text-sm font-semibold text-red-400 mt-2 inline-block hover:underline">Consultar Servicio &rarr;</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PESTAÑA DESPLEGABLE: SERVICIOS COMPLEMENTARIOS -->
+                <div class="border border-red-500/40 rounded-2xl overflow-hidden bg-slate-950/80 shadow-[0_0_20px_rgba(239,68,68,0.15)] transition-all">
+                    <button id="toggle-comp-services-btn" class="w-full flex items-center justify-between p-4 bg-slate-900/90 text-white font-bold text-base sm:text-lg hover:bg-slate-800 transition-all border-b border-slate-800/80 group">
+                        <span class="flex items-center gap-2 text-red-400 group-hover:text-red-300">
+                            <svg class="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            Servicios Complementarios
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs bg-red-950 text-red-400 border border-red-500/30 px-2 py-0.5 rounded-full font-semibold">5 servicios</span>
+                            <svg id="comp-chevron" class="w-5 h-5 text-red-400 transition-transform duration-300 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                    </button>
+
+                    <div id="comp-services-content" class="p-4 space-y-4 border-t border-slate-800/80 transition-all hidden">
+                        <!-- 1. Instalaciones sanitarias -->
+                        <div class="service-card bg-slate-900/80 border-2 border-red-500/80 shadow-[0_0_15px_rgba(239,68,68,0.4)] p-4 rounded-xl flex flex-col sm:flex-row items-center gap-4 cursor-pointer hover:bg-red-600/20 hover:border-red-400 hover:shadow-[0_0_22px_rgba(239,68,68,0.6)] transition-all duration-300 active:bg-red-600/30">
+                            <img src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=200&q=70" alt="Instalaciones sanitarias" class="w-full sm:w-24 h-24 rounded-lg object-cover shrink-0" onerror="this.onerror=null;this.src='https://placehold.co/96x96/EF4444/FFFFFF?text=AGUA';">
+                            <div class="text-center sm:text-left">
+                                <h3 class="font-bold text-white text-lg">Instalaciones sanitarias</h3>
+                                <p class="text-slate-300 text-sm mt-1">Diseño de sistemas eficientes y normativos para agua y desagüe.</p>
+                                <a id="service-wa-6" href="https://wa.me/524776592182?text=Hola,%20quisiera%20consultar%20por%20Instalaciones%20sanitarias." target="_blank" class="text-sm font-semibold text-red-400 mt-2 inline-block hover:underline">Consultar Servicio &rarr;</a>
+                            </div>
+                        </div>
+
+                        <!-- 2. Instalaciones hidráulicas -->
+                        <div class="service-card bg-slate-900/80 border-2 border-red-500/80 shadow-[0_0_15px_rgba(239,68,68,0.4)] p-4 rounded-xl flex flex-col sm:flex-row items-center gap-4 cursor-pointer hover:bg-red-600/20 hover:border-red-400 hover:shadow-[0_0_22px_rgba(239,68,68,0.6)] transition-all duration-300 active:bg-red-600/30">
+                            <img src="https://images.unsplash.com/photo-1615873968403-89e068629265?w=200&q=70" alt="Instalaciones hidráulicas" class="w-full sm:w-24 h-24 rounded-lg object-cover shrink-0" onerror="this.onerror=null;this.src='https://placehold.co/96x96/EF4444/FFFFFF?text=HIDRAULICA';">
+                            <div class="text-center sm:text-left">
+                                <h3 class="font-bold text-white text-lg">Instalaciones hidráulicas</h3>
+                                <p class="text-slate-300 text-sm mt-1">Proyectos de abastecimiento y distribución de agua potable.</p>
+                                <a id="service-wa-7" href="https://wa.me/524776592182?text=Hola,%20quisiera%20consultar%20por%20Instalaciones%20hidráulicas." target="_blank" class="text-sm font-semibold text-red-400 mt-2 inline-block hover:underline">Consultar Servicio &rarr;</a>
+                            </div>
+                        </div>
+
+                        <!-- 3. Instalaciones eléctricas -->
+                        <div class="service-card bg-slate-900/80 border-2 border-red-500/80 shadow-[0_0_15px_rgba(239,68,68,0.4)] p-4 rounded-xl flex flex-col sm:flex-row items-center gap-4 cursor-pointer hover:bg-red-600/20 hover:border-red-400 hover:shadow-[0_0_22px_rgba(239,68,68,0.6)] transition-all duration-300 active:bg-red-600/30">
+                            <img src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=200&q=70" alt="Instalaciones eléctricas" class="w-full sm:w-24 h-24 rounded-lg object-cover shrink-0" onerror="this.onerror=null;this.src='https://placehold.co/96x96/EF4444/FFFFFF?text=LUZ';">
+                            <div class="text-center sm:text-left">
+                                <h3 class="font-bold text-white text-lg">Instalaciones eléctricas</h3>
+                                <p class="text-slate-300 text-sm mt-1">Planificación de redes eléctricas seguras y funcionales.</p>
+                                <a id="service-wa-8" href="https://wa.me/524776592182?text=Hola,%20quisiera%20consultar%20por%20Instalaciones%20eléctricas." target="_blank" class="text-sm font-semibold text-red-400 mt-2 inline-block hover:underline">Consultar Servicio &rarr;</a>
+                            </div>
+                        </div>
+
+                        <!-- 4. Instalaciones pluviales -->
+                        <div class="service-card bg-slate-900/80 border-2 border-red-500/80 shadow-[0_0_15px_rgba(239,68,68,0.4)] p-4 rounded-xl flex flex-col sm:flex-row items-center gap-4 cursor-pointer hover:bg-red-600/20 hover:border-red-400 hover:shadow-[0_0_22px_rgba(239,68,68,0.6)] transition-all duration-300 active:bg-red-600/30">
+                            <img src="https://images.unsplash.com/photo-1517646287270-a5a9ca602e5c?w=200&q=70" alt="Instalaciones pluviales" class="w-full sm:w-24 h-24 rounded-lg object-cover shrink-0" onerror="this.onerror=null;this.src='https://placehold.co/96x96/EF4444/FFFFFF?text=PLUVIAL';">
+                            <div class="text-center sm:text-left">
+                                <h3 class="font-bold text-white text-lg">Instalaciones pluviales</h3>
+                                <p class="text-slate-300 text-sm mt-1">Soluciones para el manejo de aguas pluviales.</p>
+                                <a id="service-wa-9" href="https://wa.me/524776592182?text=Hola,%20quisiera%20consultar%20por%20Instalaciones%20pluviales." target="_blank" class="text-sm font-semibold text-red-400 mt-2 inline-block hover:underline">Consultar Servicio &rarr;</a>
+                            </div>
+                        </div>
+
+                        <!-- 5. Instalaciones de voz y datos -->
+                        <div class="service-card bg-slate-900/80 border-2 border-red-500/80 shadow-[0_0_15px_rgba(239,68,68,0.4)] p-4 rounded-xl flex flex-col sm:flex-row items-center gap-4 cursor-pointer hover:bg-red-600/20 hover:border-red-400 hover:shadow-[0_0_22px_rgba(239,68,68,0.6)] transition-all duration-300 active:bg-red-600/30">
+                            <img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=200&q=70" alt="Instalaciones de voz y datos" class="w-full sm:w-24 h-24 rounded-lg object-cover shrink-0" onerror="this.onerror=null;this.src='https://placehold.co/96x96/EF4444/FFFFFF?text=REDES';">
+                            <div class="text-center sm:text-left">
+                                <h3 class="font-bold text-white text-lg">Instalaciones de voz y datos</h3>
+                                <p class="text-slate-300 text-sm mt-1">Infraestructura tecnológica para comunicaciones modernas.</p>
+                                <a id="service-wa-10" href="https://wa.me/524776592182?text=Hola,%20quisiera%20consultar%20por%20Instalaciones%20de%20voz%20y%20datos." target="_blank" class="text-sm font-semibold text-red-400 mt-2 inline-block hover:underline">Consultar Servicio &rarr;</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6 border-t border-slate-800 mt-auto flex-shrink-0 bg-slate-950 rounded-b-2xl">
+                 <a id="service-wa-main" href="https://wa.me/524776592182?text=Hola,%20quisiera%20solicitar%20un%20presupuesto." target="_blank" class="w-full flex items-center justify-center bg-red-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-red-500 transition-all duration-200 shadow-[0_0_20px_rgba(239,68,68,0.3)]">
+                     Solicitar Presupuesto por WhatsApp
+                 </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL INSTALACION -->
+    <div id="install-instructions-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        <div class="modal-content bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full relative scale-95 opacity-0 overflow-hidden border border-slate-800">
+            <div class="bg-slate-950 p-4 border-b border-slate-800 flex items-center justify-between">
+                <h3 class="font-bold text-white text-base">Instalar Tarjeta en tu Móvil</h3>
+                <button id="close-instructions-modal-btn" class="text-slate-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="p-5 space-y-4 text-xs sm:text-sm text-slate-300">
+                <div class="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700">
+                    <p class="font-bold text-red-400 mb-1 flex items-center gap-1.5">
+                        📱 En iPhone / iOS (Safari):
+                    </p>
+                    <ol class="list-decimal list-inside space-y-1 text-slate-300">
+                        <li>Toca el botón <strong class="text-white">Compartir</strong> (el ícono del cuadrado con flecha hacia arriba).</li>
+                        <li>Desplázate hacia abajo y selecciona <strong class="text-white">Añadir a pantalla de inicio</strong>.</li>
+                        <li>Toca <strong class="text-white">Añadir</strong> en la esquina superior derecha.</li>
+                    </ol>
+                </div>
+
+                <div class="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700">
+                    <p class="font-bold text-red-400 mb-1 flex items-center gap-1.5">
+                        🤖 En Android (Chrome):
+                    </p>
+                    <ol class="list-decimal list-inside space-y-1 text-slate-300">
+                        <li>Toca el menú de tres puntos <strong class="text-white">(⋮)</strong> arriba a la derecha.</li>
+                        <li>Selecciona <strong class="text-white">Instalar aplicación</strong> o <strong class="text-white">Añadir a la pantalla de inicio</strong>.</li>
+                        <li>Confirma la instalación.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL QR -->
+    <div id="qr-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        <div class="modal-content bg-slate-900 rounded-2xl shadow-2xl max-w-xs w-full relative text-center scale-95 opacity-0 overflow-hidden border border-slate-800">
+            <div class="bg-red-600 p-5 relative">
+                <h2 class="text-xl font-bold text-white">Compartir Tarjeta</h2>
+                <button id="close-qr-modal-btn" class="absolute top-3 right-3 text-white/80 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="p-6">
+                <div id="qrcode-container" class="flex justify-center p-3 bg-white rounded-xl border border-slate-700 shadow-inner">
+                    <div id="qrcode"></div>
+                </div>
+                <p class="text-slate-400 mt-4 text-xs">Escanea este código para abrir mi tarjeta en otro dispositivo.</p>
+                <button id="native-share-btn" class="mt-6 w-full flex items-center justify-center bg-red-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-red-500 transition-all duration-200 shadow-md">
+                    Compartir Ahora
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const setupModal = (modalId, openBtnId, closeBtnId) => {
+                try {
+                    const modal = document.getElementById(modalId);
+                    const openBtn = document.getElementById(openBtnId);
+                    const closeBtn = modal ? modal.querySelector(closeBtnId) : null;
+                    if (!modal) return;
+                    const modalContent = modal.querySelector('.modal-content');
+
+                    const open = () => {
+                        modal.classList.remove('hidden');
+                        setTimeout(() => { if (modalContent) modalContent.classList.remove('scale-95', 'opacity-0'); }, 10);
+                    };
+                    const close = () => {
+                        if (modalContent) modalContent.classList.add('scale-95', 'opacity-0');
+                        setTimeout(() => modal.classList.add('hidden'), 300);
+                    };
+
+                    if (openBtn) openBtn.addEventListener('click', open);
+                    if (closeBtn) closeBtn.addEventListener('click', close);
+                    modal.addEventListener('click', (e) => e.target === modal && close());
+                } catch(e) { console.log("Modal setup error:", e); }
+            };
+
+            setupModal('install-instructions-modal', 'show-instructions-btn', '#close-instructions-modal-btn');
+            setupModal('qr-modal', 'show-qr-btn', '#close-qr-modal-btn');
+            setupModal('services-modal', 'services-btn', '#close-services-modal-btn');
+            setupModal('ai-modal', 'ai-assistant-btn', '#close-ai-modal-btn');
+            setupModal('render-modal', 'ai-render-btn', '#close-render-modal-btn');
+            setupModal('platform-hub-modal', 'newsletter-btn', '#close-platform-hub-btn');
+
+            // CONTROL DEL ACCESO A PLATAFORMA / REGISTRO
+            const newsletterBtn = document.getElementById('newsletter-btn');
+            const platformBtnText = document.getElementById('platform-btn-text');
+            const newsletterModal = document.getElementById('newsletter-modal');
+            const platformHubModal = document.getElementById('platform-hub-modal');
+            const platformUserGreeting = document.getElementById('platform-user-greeting');
+
+            const tabClientMode = document.getElementById('tab-client-mode');
+            const tabResourcesMode = document.getElementById('tab-resources-mode');
+            const clientQuoteContainer = document.getElementById('client-quote-container');
+            const resourcesSectionContainer = document.getElementById('resources-section-container');
+
+            const switchPlatformTab = (mode) => {
+                if (mode === 'client') {
+                    clientQuoteContainer?.classList.remove('hidden');
+                    resourcesSectionContainer?.classList.add('hidden');
+                    
+                    tabClientMode?.classList.add('bg-red-600/80', 'text-white', 'shadow-[0_0_12px_rgba(239,68,68,0.4)]', 'border-red-400');
+                    tabClientMode?.classList.remove('bg-slate-800', 'text-slate-300', 'border-slate-700');
+
+                    tabResourcesMode?.classList.remove('bg-red-600/80', 'text-white', 'shadow-[0_0_12px_rgba(239,68,68,0.4)]', 'border-red-400');
+                    tabResourcesMode?.classList.add('bg-slate-800', 'text-slate-300', 'border-slate-700');
+                } else {
+                    clientQuoteContainer?.classList.add('hidden');
+                    resourcesSectionContainer?.classList.remove('hidden');
+
+                    tabResourcesMode?.classList.add('bg-red-600/80', 'text-white', 'shadow-[0_0_12px_rgba(239,68,68,0.4)]', 'border-red-400');
+                    tabResourcesMode?.classList.remove('bg-slate-800', 'text-slate-300', 'border-slate-700');
+
+                    tabClientMode?.classList.remove('bg-red-600/80', 'text-white', 'shadow-[0_0_12px_rgba(239,68,68,0.4)]', 'border-red-400');
+                    tabClientMode?.classList.add('bg-slate-800', 'text-slate-300', 'border-slate-700');
+                }
+            };
+
+            if (tabClientMode) tabClientMode.addEventListener('click', () => switchPlatformTab('client'));
+            if (tabResourcesMode) tabResourcesMode.addEventListener('click', () => switchPlatformTab('resources'));
+
+            const checkUserSession = () => {
+                const currentUser = localStorage.getItem('arq_current_user');
+                if (currentUser) {
+                    try {
+                        const user = JSON.parse(currentUser);
+                        if (platformBtnText) platformBtnText.innerText = `ARQIA SECRET (${user.username})`;
+                        if (platformUserGreeting) platformUserGreeting.innerText = `¡Hola, ${user.name}! (${user.profileType === 'estudiante' ? 'Estudiante' : 'Cliente'})`;
+                        
+                        // Si el usuario registrado es cliente, mostrar por defecto el cotizador
+                        if (user.profileType === 'cliente') {
+                            switchPlatformTab('client');
+                        } else {
+                            switchPlatformTab('resources');
+                        }
+                        return true;
+                    } catch(e) {}
+                }
+                if (platformBtnText) platformBtnText.innerText = "ARQIA SECRET";
+                switchPlatformTab('client');
+                return false;
+            };
+
+            checkUserSession();
+
+            // LOGICA CUESTIONARIO DE COTIZACIÓN PARA CLIENTE
+            const quoteData = {
+                clientName: '',
+                clientPhone: '',
+                clientEmail: '',
+                clientCompany: '',
+                projectName: '',
+                projectLocation: '',
+                projectType: 'Residencial (Habitacional / Villa)',
+                scopeItems: [],
+                timeline: '',
+                notes: ''
+            };
+
+            // GENERADOR DE DOCUMENTO PDF OFICIAL ARQIA 4
+            const generateProjectPDF = (shouldDownload = true) => {
+                if (!window.jspdf || !window.jspdf.jsPDF) {
+                    alert("Cargando la librería de PDF. Por favor intenta en un instante.");
+                    return null;
+                }
+                
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({
+                    orientation: 'p',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                const tokenId = "TOKEN-ARQ4-" + Math.floor(100000 + Math.random() * 900000);
+
+                // MARCA DE AGUA EN EL FONDO (GOTA DE AGUA / WATERMARK)
+                try {
+                    const watermarkImg = document.getElementById('display-photo');
+                    if (watermarkImg && watermarkImg.complete && watermarkImg.naturalWidth !== 0) {
+                        if (doc.GState) {
+                            doc.setGState(new doc.GState({ opacity: 0.07 }));
+                        }
+                        // Centrado en la página A4 (210mm x 297mm)
+                        doc.addImage(watermarkImg, 'PNG', 40, 70, 130, 160);
+                        if (doc.GState) {
+                            doc.setGState(new doc.GState({ opacity: 1.0 }));
+                        }
+                    }
+                } catch (e) {
+                    console.log("PDF watermark error:", e);
+                }
+
+                // Header Dark Banner
+                doc.setFillColor(2, 6, 23); // slate-950
+                doc.rect(0, 0, 210, 38, 'F');
+
+                // Accent red line
+                doc.setFillColor(239, 68, 68); // red-500
+                doc.rect(0, 38, 210, 2, 'F');
+
+                // ARQIA 4 Logo en la esquina superior izquierda
+                try {
+                    const logoImg = document.getElementById('display-photo');
+                    if (logoImg && logoImg.complete && logoImg.naturalWidth !== 0) {
+                        doc.addImage(logoImg, 'PNG', 12, 4, 22, 28);
+                    }
+                } catch (e) {
+                    console.log("PDF logo error:", e);
+                }
+
+                // ARQIA 4 Header Title (Alineado con el logotipo)
+                doc.setTextColor(255, 255, 255);
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(20);
+                doc.text("ARQIA 4", 38, 16);
+
+                doc.setFontSize(8.5);
+                doc.setFont("helvetica", "bold");
+                doc.setTextColor(239, 68, 68);
+                doc.text("ESTUDIO ARQUITECTÓNICO & CREACIÓN DIGITAL", 38, 23);
+
+                doc.setFontSize(7.5);
+                doc.setFont("helvetica", "normal");
+                doc.setTextColor(148, 163, 184);
+                doc.text("Documento Oficial de Token de Proyecto & Cotización", 38, 29);
+
+                // ID & Date on Right Header Side
+                doc.setTextColor(255, 255, 255);
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(9);
+                doc.text(`ID: ${tokenId}`, 145, 16);
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(8);
+                doc.setTextColor(203, 213, 225);
+                doc.text(`Fecha: ${dateStr}`, 145, 22);
+                doc.setTextColor(52, 211, 153);
+                doc.text("Estatus: ARQIENTE Activo", 145, 28);
+
+                let y = 50;
+
+                // Section Headers Helper
+                const addSectionHeader = (title) => {
+                    doc.setFillColor(241, 245, 249); // slate-100
+                    doc.rect(15, y, 180, 8, 'F');
+                    doc.setDrawColor(203, 213, 225);
+                    doc.rect(15, y, 180, 8, 'S');
+
+                    doc.setFont("helvetica", "bold");
+                    doc.setFontSize(9.5);
+                    doc.setTextColor(15, 23, 42);
+                    doc.text(title.toUpperCase(), 18, y + 5.5);
+                    y += 12;
+                };
+
+                // Data Rows Helper
+                const addDataRow = (label, value) => {
+                    doc.setFont("helvetica", "bold");
+                    doc.setFontSize(9);
+                    doc.setTextColor(51, 65, 85);
+                    doc.text(`${label}:`, 20, y);
+
+                    doc.setFont("helvetica", "normal");
+                    doc.setTextColor(15, 23, 42);
+                    
+                    const lines = doc.splitTextToSize(value || 'No especificado', 120);
+                    doc.text(lines, 65, y);
+                    y += (lines.length * 5) + 2;
+                };
+
+                // 1. DATOS DEL CLIENTE
+                addSectionHeader("1. Datos del Cliente");
+                addDataRow("Nombre del Cliente", quoteData.clientName);
+                addDataRow("Teléfono / WhatsApp", quoteData.clientPhone);
+                addDataRow("Correo Electrónico", quoteData.clientEmail);
+                if (quoteData.clientCompany) {
+                    addDataRow("Empresa / Despacho", quoteData.clientCompany);
+                }
+                y += 4;
+
+                // 2. INFORMACIÓN DEL PROYECTO
+                addSectionHeader("2. Información del Proyecto");
+                addDataRow("Nombre del Proyecto", quoteData.projectName);
+                addDataRow("Ubicación / Ciudad", quoteData.projectLocation);
+                addDataRow("Tipo de Proyecto", quoteData.projectType);
+                y += 4;
+
+                // 3. ALCANCE DEL TRABAJO
+                addSectionHeader("3. Alcance del Trabajo Solicitado");
+                const scopeText = quoteData.scopeItems.length ? quoteData.scopeItems.join(", ") : "Proyecto Arquitectónico Integral";
+                addDataRow("Servicios Incluidos", scopeText);
+                y += 4;
+
+                // 4. TIEMPO Y DETALLES ADICIONALES
+                addSectionHeader("4. Tiempos & Observaciones");
+                addDataRow("Inicio Estimado", quoteData.timeline || 'Por definir');
+                if (quoteData.notes) {
+                    addDataRow("Detalles Adicionales", quoteData.notes);
+                }
+                y += 6;
+
+                // BANNER BENEFICIO EXCLUSIVO ARQIENTES
+                doc.setFillColor(236, 253, 245); // emerald-50
+                doc.setDrawColor(16, 185, 129); // emerald-500
+                doc.setLineWidth(0.5);
+                doc.roundedRect(15, y, 180, 22, 3, 3, 'FD');
+
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(10);
+                doc.setTextColor(4, 120, 87); // emerald-700
+                doc.text("BENEFICIO EXCLUSIVO DE LA COMUNIDAD ARQIENTES", 20, y + 7);
+
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(8.5);
+                doc.setTextColor(6, 95, 70);
+                doc.text("Bono de descuento directo otorgado al registrarte en la plataforma:", 20, y + 12.5);
+
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(11);
+                doc.setTextColor(5, 150, 105);
+                doc.text("$1,000.00 MXN", 145, y + 12.5);
+
+                doc.setFontSize(7.5);
+                doc.setFont("helvetica", "italic");
+                doc.setTextColor(15, 118, 110);
+                doc.text("Este bono será aplicado directamente al formalizar el presupuesto de tu obra con ARQIA 4.", 20, y + 17.5);
+
+                // FOOTER
+                doc.setFillColor(15, 23, 42);
+                doc.rect(0, 275, 210, 22, 'F');
+
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(8);
+                doc.setTextColor(255, 255, 255);
+                doc.text("ARQIA 4 - Creación e Innovación Arquitectónica", 15, 282);
+
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(7.5);
+                doc.setTextColor(148, 163, 184);
+                doc.text("León, Guanajuato | Tel/WA: +52 477 659 2182 | Instagram: @arqia_4", 15, 288);
+
+                const fileName = `${quoteData.projectName ? quoteData.projectName.replace(/[^a-zA-Z0-9]/g, '_') : 'Token_Proyecto'}_ARQIA4.pdf`;
+
+                if (shouldDownload) {
+                    doc.save(fileName);
+                }
+
+                return { doc, fileName };
+            };
+
+            // FUNCIÓN PARA ENVIAR POR WHATSAPP CON ADJUNTO PDF
+            const handleSendWhatsAppWithPDF = async () => {
+                const savedWa = document.getElementById('input-wa')?.value?.replace(/[^0-9]/g, '') || '524776592182';
+                const msgText = `Hola ARQIA 4, soy parte de los ARQIENTES y envío los datos de mi TOKEN DE PROYECTO:
+
+👤 *DATOS DEL CLIENTE:*
+• Nombre: ${quoteData.clientName}
+• Teléfono: ${quoteData.clientPhone}
+• Correo: ${quoteData.clientEmail}
+${quoteData.clientCompany ? '• Empresa: ' + quoteData.clientCompany : ''}
+
+📌 *INFORMACIÓN DEL PROYECTO:*
+• Nombre del Proyecto: ${quoteData.projectName}
+• Ubicación: ${quoteData.projectLocation}
+• Tipo de Proyecto: ${quoteData.projectType}
+
+🛠️ *ALCANCE DEL TRABAJO:*
+• Requerimientos: ${quoteData.scopeItems.join(', ') || 'Proyecto integral'}
+
+📅 *TIEMPO E INICIO:* ${quoteData.timeline || 'Por definir'}
+📝 *DETALLES ADICIONALES:* ${quoteData.notes || 'Ninguno'}
+
+🎁 *BENEFICIO EXCLUSIVO ARQIENTES:* Solicito aplicar mi Bono Exclusivo de $1,000 MXN de descuento a esta cotización.`;
+
+                const result = generateProjectPDF(false);
+                if (!result) return;
+
+                const { doc, fileName } = result;
+                const pdfBlob = doc.output('blob');
+                const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
+
+                // Intenta enviar mediante Web Share API si el navegador/móvil soporta compartir archivos
+                if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+                    try {
+                        await navigator.share({
+                            title: `Token de Proyecto - ${quoteData.projectName || 'ARQIA 4'}`,
+                            text: msgText,
+                            files: [pdfFile]
+                        });
+                        return;
+                    } catch (err) {
+                        console.log("Web Share cancelado o no disponible:", err);
+                    }
+                }
+
+                // Respaldo para navegadores de escritorio: Descarga el PDF y abre el chat de WhatsApp
+                doc.save(fileName);
+                
+                const waUrl = `https://wa.me/${savedWa}?text=${encodeURIComponent(msgText + '\n\n📎 (Nota: He descargado y adjunto el archivo PDF oficial de mi proyecto)')}`;
+                window.open(waUrl, '_blank');
+
+                const msgBox = document.createElement('div');
+                msgBox.className = 'fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-emerald-400 border border-emerald-500/80 px-4 py-3 rounded-xl text-xs z-50 shadow-2xl text-center max-w-xs';
+                msgBox.innerHTML = '✓ <strong>¡PDF generado y descargado!</strong><br>Por favor adjunta el archivo PDF descargado en tu chat de WhatsApp.';
+                document.body.appendChild(msgBox);
+                setTimeout(() => msgBox.remove(), 5000);
+            };
+
+            const quoteStepIndicator = document.getElementById('quote-step-indicator');
+
+            const showQuoteStep = (stepNumber) => {
+                document.querySelectorAll('.quote-step-block').forEach(el => el.classList.add('hidden'));
+                const targetStep = document.getElementById(stepNumber === 5 ? 'quote-step-summary' : `quote-step-${stepNumber}`);
+                if (targetStep) targetStep.classList.remove('hidden');
+
+                if (quoteStepIndicator) {
+                    quoteStepIndicator.innerText = stepNumber === 5 ? 'Resumen Listo' : `Paso ${stepNumber} de 4`;
+                }
+            };
+
+            // Botones "Atrás"
+            document.querySelectorAll('.back-step-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const target = parseInt(btn.getAttribute('data-target') || '1');
+                    showQuoteStep(target);
+                });
+            });
+
+            // Paso 1: Datos del cliente -> Paso 2
+            document.getElementById('next-step-1-btn')?.addEventListener('click', () => {
+                const name = document.getElementById('quote-client-name')?.value.trim();
+                const phone = document.getElementById('quote-client-phone')?.value.trim();
+                const email = document.getElementById('quote-client-email')?.value.trim();
+
+                if (!name || !phone || !email) {
+                    alert('Por favor ingresa tu Nombre Completo, Teléfono y Correo Electrónico.');
+                    return;
+                }
+
+                quoteData.clientName = name;
+                quoteData.clientPhone = phone;
+                quoteData.clientEmail = email;
+                quoteData.clientCompany = document.getElementById('quote-client-company')?.value.trim() || '';
+
+                showQuoteStep(2);
+            });
+
+            // Paso 2: Información del Proyecto -> Paso 3
+            document.getElementById('next-step-2-btn')?.addEventListener('click', () => {
+                const projName = document.getElementById('quote-project-name')?.value.trim();
+                const projLoc = document.getElementById('quote-project-location')?.value.trim();
+
+                if (!projName || !projLoc) {
+                    alert('Por favor ingresa el Nombre del Proyecto y la Ubicación.');
+                    return;
+                }
+
+                quoteData.projectName = projName;
+                quoteData.projectLocation = projLoc;
+                quoteData.projectType = document.getElementById('quote-project-type')?.value || 'Residencial';
+
+                showQuoteStep(3);
+            });
+
+            // Paso 3: Alcance del Trabajo -> Paso 4
+            document.getElementById('next-step-3-btn')?.addEventListener('click', () => {
+                const selectedScope = [];
+                document.querySelectorAll('.quote-scope-checkbox:checked').forEach(cb => {
+                    selectedScope.push(cb.value);
+                });
+                quoteData.scopeItems = selectedScope;
+                showQuoteStep(4);
+            });
+
+            // Opciones del Paso 4 (Timeline)
+            document.querySelectorAll('.quote-option-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const field = btn.getAttribute('data-field');
+                    const value = btn.getAttribute('data-value');
+
+                    if (field === 'timeline' && value) {
+                        quoteData.timeline = value;
+                        btn.closest('#quote-step-4')?.querySelectorAll('.quote-option-btn').forEach(b => {
+                            b.classList.remove('border-red-500', 'bg-red-950/60');
+                            b.classList.add('border-slate-700', 'bg-slate-900');
+                        });
+                        btn.classList.remove('border-slate-700', 'bg-slate-900');
+                        btn.classList.add('border-red-500', 'bg-red-950/60');
+                    }
+                });
+            });
+
+            // Paso 4 -> Finalizar y Resumen
+            document.getElementById('finish-quote-btn')?.addEventListener('click', () => {
+                quoteData.notes = document.getElementById('quote-notes-input')?.value.trim() || '';
+
+                // Actualizar elementos del resumen
+                const summaryClient = document.getElementById('summary-client');
+                const summaryContact = document.getElementById('summary-contact');
+                const summaryProject = document.getElementById('summary-project');
+                const summaryLocation = document.getElementById('summary-location');
+                const summaryScope = document.getElementById('summary-scope');
+                const summaryTimeline = document.getElementById('summary-timeline');
+                const summaryNotes = document.getElementById('summary-notes');
+
+                if (summaryClient) summaryClient.innerText = `${quoteData.clientName}${quoteData.clientCompany ? ' (' + quoteData.clientCompany + ')' : ''}`;
+                if (summaryContact) summaryContact.innerText = `${quoteData.clientPhone} | ${quoteData.clientEmail}`;
+                if (summaryProject) summaryProject.innerText = `${quoteData.projectName} [${quoteData.projectType}]`;
+                if (summaryLocation) summaryLocation.innerText = quoteData.projectLocation || 'No especificada';
+                if (summaryScope) summaryScope.innerText = quoteData.scopeItems.length ? quoteData.scopeItems.join(', ') : 'Diseño General';
+                if (summaryTimeline) summaryTimeline.innerText = quoteData.timeline || 'Por definir';
+                if (summaryNotes) summaryNotes.innerText = quoteData.notes || 'Sin observaciones adicionales';
+
+                showQuoteStep(5);
+
+                // Generar y descargar automáticamente el PDF del Token
+                generateProjectPDF(true);
+            });
+
+            // Evento para el botón Enviar por WA con PDF
+            document.getElementById('send-quote-wa-btn')?.addEventListener('click', () => {
+                handleSendWhatsAppWithPDF();
+            });
+
+            // Evento para el botón de descarga manual de PDF
+            document.getElementById('download-token-pdf-btn')?.addEventListener('click', () => {
+                generateProjectPDF(true);
+            });
+
+            // Reiniciar Cuestionario
+            document.getElementById('reset-quote-btn')?.addEventListener('click', () => {
+                quoteData.clientName = '';
+                quoteData.clientPhone = '';
+                quoteData.clientEmail = '';
+                quoteData.clientCompany = '';
+                quoteData.projectName = '';
+                quoteData.projectLocation = '';
+                quoteData.scopeItems = [];
+                quoteData.timeline = '';
+                quoteData.notes = '';
+
+                const fieldsToClear = ['quote-client-name', 'quote-client-phone', 'quote-client-email', 'quote-client-company', 'quote-project-name', 'quote-project-location', 'quote-notes-input'];
+                fieldsToClear.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
+
+                showQuoteStep(1);
+            });
+
+            // BUSCADOR EN TIEMPO REAL EN LA PLATAFORMA
+            const searchInput = document.getElementById('platform-search-input');
+            const clearSearchBtn = document.getElementById('clear-search-btn');
+
+            const filterPlatformContent = () => {
+                const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+                
+                if (clearSearchBtn) {
+                    if (query.length > 0) clearSearchBtn.classList.remove('hidden');
+                    else clearSearchBtn.classList.add('hidden');
+                }
+
+                // Filtrar tarjetas de video
+                document.querySelectorAll('.video-card').forEach(card => {
+                    const title = card.querySelector('h4')?.innerText.toLowerCase() || '';
+                    const desc = card.querySelector('p')?.innerText.toLowerCase() || '';
+                    const category = card.getAttribute('data-category') || '';
+                    const activeTab = document.querySelector('.software-tab.active')?.getAttribute('data-filter') || 'all';
+
+                    const matchesTab = (activeTab === 'all' || activeTab === category);
+                    const matchesQuery = !query || title.includes(query) || desc.includes(query) || category.includes(query);
+
+                    if (matchesTab && matchesQuery) {
+                        card.classList.remove('hidden');
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+
+                // Filtrar recursos descargables
+                document.querySelectorAll('.download-resource-btn').forEach(btn => {
+                    const parentCard = btn.closest('.bg-slate-950');
+                    if (parentCard) {
+                        const title = parentCard.querySelector('h5')?.innerText.toLowerCase() || '';
+                        const desc = parentCard.querySelector('p')?.innerText.toLowerCase() || '';
+                        const filename = btn.getAttribute('data-filename')?.toLowerCase() || '';
+
+                        const matchesQuery = !query || title.includes(query) || desc.includes(query) || filename.includes(query);
+
+                        if (matchesQuery) {
+                            parentCard.classList.remove('hidden');
+                        } else {
+                            parentCard.classList.add('hidden');
+                        }
+                    }
+                });
+            };
+
+            if (searchInput) {
+                searchInput.addEventListener('input', filterPlatformContent);
+            }
+
+            if (clearSearchBtn) {
+                clearSearchBtn.addEventListener('click', () => {
+                    if (searchInput) {
+                        searchInput.value = '';
+                        filterPlatformContent();
+                        searchInput.focus();
+                    }
+                });
+            }
+
+            // FILTROS DE VIDEOS POR SOFTWARE
+            const softwareTabs = document.querySelectorAll('.software-tab');
+            const videoCards = document.querySelectorAll('.video-card');
+
+            softwareTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    softwareTabs.forEach(t => {
+                        t.classList.remove('active', 'bg-red-600', 'text-white', 'shadow-sm');
+                        t.classList.add('bg-slate-800', 'text-slate-300', 'border', 'border-slate-700');
+                    });
+                    tab.classList.remove('bg-slate-800', 'text-slate-300', 'border', 'border-slate-700');
+                    tab.classList.add('active', 'bg-red-600', 'text-white', 'shadow-sm');
+
+                    filterPlatformContent();
+                });
+            });
+
+            // REPRODUCTOR DE VIDEO MODAL
+            const videoPlayerModal = document.getElementById('video-player-modal');
+            const playerSoftwareTag = document.getElementById('player-software-tag');
+            const playerVideoTitle = document.getElementById('player-video-title');
+            const closeVideoPlayerBtn = document.getElementById('close-video-player-btn');
+            const closePlayerBottomBtn = document.getElementById('close-player-bottom-btn');
+
+            document.querySelectorAll('.play-video-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const title = btn.getAttribute('data-title') || 'Tutorial ARQIA 4';
+                    const software = btn.getAttribute('data-software') || 'Software';
+
+                    if (playerSoftwareTag) playerSoftwareTag.innerText = software;
+                    if (playerVideoTitle) playerVideoTitle.innerText = title;
+
+                    if (videoPlayerModal) {
+                        const modalContent = videoPlayerModal.querySelector('.modal-content');
+                        videoPlayerModal.classList.remove('hidden');
+                        setTimeout(() => modalContent?.classList.remove('scale-95', 'opacity-0'), 10);
+                    }
+                });
+            });
+
+            const closeVideoPlayer = () => {
+                if (videoPlayerModal) {
+                    const modalContent = videoPlayerModal.querySelector('.modal-content');
+                    if (modalContent) modalContent.classList.add('scale-95', 'opacity-0');
+                    setTimeout(() => videoPlayerModal.classList.add('hidden'), 300);
+                }
+            };
+
+            if (closeVideoPlayerBtn) closeVideoPlayerBtn.addEventListener('click', closeVideoPlayer);
+            if (closePlayerBottomBtn) closePlayerBottomBtn.addEventListener('click', closeVideoPlayer);
+
+            // DESCARGA DE RECURSOS DE PLATAFORMA
+            document.querySelectorAll('.download-resource-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const filename = btn.getAttribute('data-filename') || 'Recurso_ARQIA4.txt';
+                    const content = `PLATAFORMA ARQIA 4 - RECURSO EXCLUSIVO\nArchivo: ${filename}\nGracias por descargar este recurso. Si deseas acceder a más contenido exclusivo al finalizar tus 24h de prueba gratuita, suscríbete por $199/mes.\nContacto: ARQIA 4`;
+                    
+                    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }, 100);
+
+                    const oldText = btn.innerText;
+                    btn.innerText = '✓ ¡Descargado!';
+                    btn.classList.replace('bg-slate-800', 'bg-emerald-600');
+                    setTimeout(() => {
+                        btn.innerText = oldText;
+                        btn.classList.replace('bg-emerald-600', 'bg-slate-800');
+                    }, 2000);
+                });
+            });
+
+            const toggleMainServicesBtn = document.getElementById('toggle-main-services-btn');
+            const mainServicesContent = document.getElementById('main-services-content');
+            const servicesChevron = document.getElementById('services-chevron');
+
+            if (toggleMainServicesBtn && mainServicesContent && servicesChevron) {
+                toggleMainServicesBtn.addEventListener('click', () => {
+                    mainServicesContent.classList.toggle('hidden');
+                    servicesChevron.classList.toggle('rotate-180');
+                });
+            }
+
+            const toggleCompServicesBtn = document.getElementById('toggle-comp-services-btn');
+            const compServicesContent = document.getElementById('comp-services-content');
+            const compChevron = document.getElementById('comp-chevron');
+
+            if (toggleCompServicesBtn && compServicesContent && compChevron) {
+                toggleCompServicesBtn.addEventListener('click', () => {
+                    compServicesContent.classList.toggle('hidden');
+                    compChevron.classList.toggle('rotate-180');
+                });
+            }
+
+            document.querySelectorAll('.service-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    document.querySelectorAll('.service-card').forEach(c => {
+                        c.classList.remove('bg-red-600/30', 'border-red-400', 'shadow-[0_0_25px_rgba(239,68,68,0.8)]');
+                        c.classList.add('bg-slate-900/80', 'border-red-500/80');
+                    });
+                    card.classList.remove('bg-slate-900/80', 'border-red-500/80');
+                    card.classList.add('bg-red-600/30', 'border-red-400', 'shadow-[0_0_25px_rgba(239,68,68,0.8)]');
+                });
+            });
+
+            try {
+                const qrContainer = document.getElementById("qrcode");
+                if (qrContainer && typeof QRCode !== 'undefined') {
+                    qrContainer.innerHTML = "";
+                    new QRCode(qrContainer, {
+                        text: window.location.href,
+                        width: 180,
+                        height: 180,
+                        colorDark: "#020617",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                }
+            } catch(e) { console.log("QR error:", e); }
+
+            document.getElementById('native-share-btn')?.addEventListener('click', () => {
+                if (navigator.share) {
+                    navigator.share({
+                        title: document.getElementById('display-name')?.innerText || 'Tarjeta Digital',
+                        text: 'Contacto profesional de arquitectura',
+                        url: window.location.href
+                    }).catch(() => {});
+                } else {
+                    const dummy = document.createElement('input');
+                    document.body.appendChild(dummy);
+                    dummy.value = window.location.href;
+                    dummy.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(dummy);
+                    
+                    const msgBox = document.createElement('div');
+                    msgBox.className = 'fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-red-400 border border-red-500/50 px-4 py-2 rounded-xl text-xs z-50 shadow-lg';
+                    msgBox.innerText = '¡Enlace copiado al portapapeles!';
+                    document.body.appendChild(msgBox);
+                    setTimeout(() => msgBox.remove(), 2500);
+                }
+            });
+
+            const loadCustomData = () => {
+                const saved = localStorage.getItem('arq_card_data');
+                if (!saved) return;
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.name) {
+                        const nameEl = document.getElementById('display-name');
+                        const inputNameEl = document.getElementById('input-name');
+                        if (nameEl) nameEl.innerText = data.name;
+                        if (inputNameEl) inputNameEl.value = data.name;
+                    }
+                    if (data.title) {
+                        const titleEl = document.getElementById('display-title');
+                        const inputTitleEl = document.getElementById('input-title');
+                        if (titleEl) titleEl.innerText = data.title;
+                        if (inputTitleEl) inputTitleEl.value = data.title;
+                    }
+                    if (data.desc) {
+                        const descEl = document.getElementById('display-desc');
+                        const inputDescEl = document.getElementById('input-desc');
+                        if (descEl) descEl.innerText = data.desc;
+                        if (inputDescEl) inputDescEl.value = data.desc;
+                    }
+                    if (data.photo) {
+                        const photoEl = document.getElementById('display-photo');
+                        const inputPhotoEl = document.getElementById('input-photo');
+                        if (photoEl) photoEl.src = data.photo;
+                        if (inputPhotoEl) inputPhotoEl.value = data.photo;
+                    }
+                    if (data.phone) {
+                        const inputPhoneEl = document.getElementById('input-phone');
+                        if (inputPhoneEl) inputPhoneEl.value = data.phone;
+                    }
+                    if (data.email) {
+                        const inputEmailEl = document.getElementById('input-email');
+                        if (inputEmailEl) inputEmailEl.value = data.email;
+                    }
+                    if (data.address) {
+                        const addrEl = document.getElementById('display-address');
+                        const inputAddrEl = document.getElementById('input-address');
+                        const linkMapEl = document.getElementById('link-map');
+                        if (addrEl) addrEl.innerText = data.address;
+                        if (inputAddrEl) inputAddrEl.value = data.address;
+                        if (linkMapEl) linkMapEl.href = `https://maps.google.com/?q=${encodeURIComponent(data.address)}`;
+                    }
+                    if (data.wa) {
+                        const cleanWa = data.wa.replace(/[^0-9]/g, '');
+                        const inputWaEl = document.getElementById('input-wa');
+                        const linkWaEl = document.getElementById('link-whatsapp');
+                        if (inputWaEl) inputWaEl.value = cleanWa;
+                        if (linkWaEl) linkWaEl.href = `https://wa.me/${cleanWa}`;
+                        
+                        document.querySelectorAll('[id^="service-wa-"]').forEach(el => {
+                            if (el) {
+                                const currentTxt = el.href.split('text=')[1] || '';
+                                el.href = `https://wa.me/${cleanWa}?text=${currentTxt}`;
+                            }
+                        });
+                    }
+                } catch(e) { console.log('Error loading saved data:', e); }
+            };
+
+            loadCustomData();
+
+            const applyCustomization = () => {
+                try {
+                    const name = document.getElementById('input-name')?.value.trim();
+                    const title = document.getElementById('input-title')?.value.trim();
+                    const desc = document.getElementById('input-desc')?.value.trim();
+                    const photo = document.getElementById('input-photo')?.value.trim();
+                    const wa = document.getElementById('input-wa')?.value.trim();
+                    const phone = document.getElementById('input-phone')?.value.trim();
+                    const email = document.getElementById('input-email')?.value.trim();
+                    const address = document.getElementById('input-address')?.value.trim();
+
+                    if (name) document.getElementById('display-name').innerText = name;
+                    if (title) document.getElementById('display-title').innerText = title;
+                    if (desc) document.getElementById('display-desc').innerText = desc;
+                    if (photo) document.getElementById('display-photo').src = photo;
+
+                    if (address) {
+                        document.getElementById('display-address').innerText = address;
+                        document.getElementById('link-map').href = `https://maps.google.com/?q=${encodeURIComponent(address)}`;
+                    }
+
+                    if (wa) {
+                        const cleanWa = wa.replace(/[^0-9]/g, '');
+                        const waUrl = `https://wa.me/${cleanWa}`;
+                        const linkWa = document.getElementById('link-whatsapp');
+                        if (linkWa) linkWa.href = waUrl;
+
+                        document.querySelectorAll('[id^="service-wa-"]').forEach(el => {
+                            if (el) {
+                                const currentTxt = el.href.split('text=')[1] || '';
+                                el.href = `https://wa.me/${cleanWa}?text=${currentTxt}`;
+                            }
+                        });
+                    }
+
+                    const dataToSave = { name, title, desc, photo, wa, phone, email, address };
+                    localStorage.setItem('arq_card_data', JSON.stringify(dataToSave));
+                } catch(e) { console.log("Apply customization error:", e); }
+            };
+
+            document.getElementById('save-contact-btn')?.addEventListener('click', () => {
+                const name = document.getElementById('display-name')?.innerText || 'Arquitecto';
+                const phone = document.getElementById('input-phone')?.value || '+52 477 659 2182';
+                const email = document.getElementById('input-email')?.value || 'carlos@mendoza-arq.com';
+                const address = document.getElementById('display-address')?.innerText || 'León, Gto.';
+                const title = document.getElementById('display-title')?.innerText || 'Creación e Innovación';
+
+                const vcard = `BEGIN:VCARD
+VERSION:3.0
+FN:${name}
+TITLE:${title}
+TEL;TYPE=CELL:${phone}
+EMAIL:${email}
+ADR;TYPE=WORK:;;${address};;;;
+END:VCARD`;
+
+                const blob = new Blob([vcard], { type: 'text/vcard;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `${name.replace(/[^a-zA-Z0-9]/g, '_')}.vcf`;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+            });
+
+            // CHATBOT ARIA
+            const aiChatMessages = document.getElementById('ai-chat-messages');
+            const aiInput = document.getElementById('ai-input');
+            const aiSendBtn = document.getElementById('ai-send-btn');
+            const aiQuickSelect = document.getElementById('ai-quick-select');
+
+            const addChatMessage = (sender, text, showWaBtn = false, userQuery = '') => {
+                const isUser = sender === 'user';
+                const msgDiv = document.createElement('div');
+                msgDiv.className = isUser 
+                    ? 'bg-red-950/60 border border-red-500/30 text-red-100 p-3 rounded-xl ml-6 text-xs sm:text-sm'
+                    : 'bg-slate-800/80 border border-slate-700 text-slate-200 p-3.5 rounded-xl mr-6 text-xs sm:text-sm';
+
+                let waButtonHtml = '';
+                if (showWaBtn && userQuery) {
+                    const savedWa = document.getElementById('input-wa')?.value?.replace(/[^0-9]/g, '') || '524776592182';
+                    const prefilledMsg = encodeURIComponent(`Hola ARQIA 4, estuve consultando en su asistente virtual sobre mi proyecto: "${userQuery}". Me gustaría recibir una asesoría y cotización formal.`);
+                    const waUrl = `https://wa.me/${savedWa}?text=${prefilledMsg}`;
+                    
+                    waButtonHtml = `
+                        <div class="mt-3 pt-2.5 border-t border-slate-700/80">
+                            <p class="text-[11px] text-slate-400 mb-2">Para recibir tu cotización directa y asesoría personalizada, presiona el botón inferior:</p>
+                            <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="w-full inline-flex items-center justify-center gap-2 bg-emerald-950/70 text-emerald-300 font-extrabold py-2.5 px-3 rounded-xl text-xs transition-all duration-300 border border-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.35)] hover:bg-emerald-900/80 hover:text-emerald-200 hover:border-emerald-300 hover:shadow-[0_0_22px_rgba(52,211,153,0.7)] active:shadow-[0_0_35px_rgba(52,211,153,1)] active:scale-95">
+                                <svg class="w-4 h-4 shrink-0 fill-current" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg>
+                                Solicitar Cotización Directa por WhatsApp
+                            </a>
+                        </div>
+                    `;
+                }
+
+                msgDiv.innerHTML = isUser
+                    ? `<p class="font-bold text-red-400 mb-0.5 text-[11px]">Tú</p><p>${text}</p>`
+                    : `<p class="font-bold text-red-400 mb-0.5 text-[11px] flex items-center gap-1"><svg class="w-3.5 h-3.5 text-red-500 fill-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,1)] shrink-0" viewBox="0 0 24 24"><path d="M13 2L3 14h7v8l10-12h-7l3-8z"/></svg> Asistente ARQIA 4</p><p>${text}</p>${waButtonHtml}`;
+
+                aiChatMessages?.appendChild(msgDiv);
+                if (aiChatMessages) aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+            };
+
+            const handleSendMessage = (userMsg) => {
+                const text = userMsg || aiInput?.value.trim();
+                if (!text) return;
+
+                if (!userMsg && aiInput) aiInput.value = '';
+                addChatMessage('user', text);
+
+                setTimeout(() => {
+                    let botReply = "";
+                    const normText = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
+                    const isGibberishOrNoise = (str) => {
+                        const cleanStr = str.replace(/[^a-z]/gi, '');
+                        if (/^(ja|ha|he|hj|js|ks|zd|asdf|qwer|zxcv)+$/i.test(cleanStr)) return true;
+                        const letters = str.replace(/[^a-z]/gi, '');
+                        if (letters.length > 3 && !/[aeiou]/i.test(letters)) return true;
+                        if (cleanStr.length < 2 && !/^(ok|si|no)$/i.test(cleanStr)) return true;
+                        return false;
+                    };
+
+                    const thanksKeywords = ['gracias', 'ok', 'o.k.', 'vale', 'entendido', 'perfecto', 'excelente', 'de acuerdo', 'muchas gracias', 'thx', 'thanks', 'saludos'];
+                    const isThanks = thanksKeywords.some(kw => {
+                        const regex = new RegExp(`\\b${kw}\\b`, 'i');
+                        return regex.test(normText);
+                    });
+
+                    const priceKeywords = ['cuanto', 'cuanto cobra', 'cuanto cuesta', 'costo', 'costos', 'precio', 'precios', 'cotiz', 'presupuesto', 'tarifa', 'cobran', 'cuanto sale', 'valor'];
+                    const isPriceQuery = priceKeywords.some(kw => normText.includes(kw));
+
+                    const validKeywords = [
+                        'plano', 'cocina', 'fachada', 'tramite', 'permiso', 
+                        'render', '3d', 'recorrido', 'virtual', 'hola', 'buen', 'presupuesto', 
+                        'cotiz', 'costo', 'obra', 'proyecto', 'remodela', 'diseno',
+                        'casa', 'terreno', 'construc', 'estudio', 'asesor', 'arq', 'servicio',
+                        'contacto', 'informacion', 'precio', 'edificio',
+                        'departamento', 'm2', 'metro', 'cuadrado', 'bano', 'sala',
+                        'comedor', 'recamara', 'terraza', 'alberca', 'jardin', 'cuanto', 'tarifa', 'cobran', 'valor'
+                    ];
+
+                    const hasKeyword = validKeywords.some(kw => normText.includes(kw));
+
+                    if (isThanks && !isPriceQuery && !normText.includes('plano') && !normText.includes('render') && !normText.includes('cocina')) {
+                        const thanksReplies = [
+                            "¡Es un placer atenderte! Te comento que soy ARIA, la asistente virtual de ARQIA 4. Con gusto, en breve un asesor humano se pondrá en contacto contigo. ¡Gracias por contactarnos!",
+                            "¡Con mucho gusto! Recuerda que soy ARIA, la asistente virtual de ARQIA 4. Muy pronto uno de nuestros asesores especializados te atenderá directamente. ¡Gracias por tu mensaje!",
+                            "¡Por nada! Te saluda ARIA, la asistente virtual de ARQIA 4. En breve un asesor se comunicará contigo para darle seguimiento a tu proyecto. ¡Gracias por escribirnos!"
+                        ];
+                        botReply = thanksReplies[Math.floor(Math.random() * thanksReplies.length)];
+                        addChatMessage('bot', botReply, false);
+                    } 
+                    else if (isGibberishOrNoise(normText) || (!hasKeyword && !isThanks)) {
+                        botReply = "No logro entenderte bien, ¿podrías repetírmelo de nuevo o detallar un poco más tu consulta? También puedes elegir un tema en las sugerencias de la lista arriba.";
+                        addChatMessage('bot', botReply, false);
+                    } 
+                    else if (isPriceQuery) {
+                        if (normText.includes('render') || normText.includes('3d')) {
+                            botReply = "Para darte el costo exacto de tu **Render o Modelado 3D**, el presupuesto varía según el tamaño del proyecto, el nivel de detalle y los acabados a representar. Te invitamos a hacer clic en el botón de abajo para comunicarse directamente con nosotros por WhatsApp y brindarte una cotización a tu medida.";
+                        } else if (normText.includes('plano')) {
+                            botReply = "El costo de la elaboración de **Planos Arquitectónicos** depende de los metros cuadrados del proyecto y de la complejidad del diseño. Comunícate directamente con nuestro equipo a través del botón de WhatsApp para brindarte una cotización precisa y personalizada.";
+                        } else if (normText.includes('cocina')) {
+                            botReply = "Para determinar el costo de la **Remodelación de Cocina**, evaluamos las dimensiones, acabados, herrajes y cubiertas que deseas. Escríbenos directamente por WhatsApp para realizarte un presupuesto a tu medida.";
+                        } else if (normText.includes('fachada')) {
+                            botReply = "El precio para la **Remodelación de Fachada** se calcula en función de los metros cuadrados de intervención y los materiales seleccionados. Ponte en contacto directo con nosotros por WhatsApp para enviarte una cotización sin compromiso.";
+                        } else {
+                            botReply = "Cada proyecto arquitectónico es único y su presupuesto depende de los metros cuadrados, ubicación y alcance de los trabajos. Para brindarte una cotización exacta y directa, te aconsejamos comunicarte con nosotros por WhatsApp. ¡Haciendo clic abajo te conectas de inmediato con nuestro equipo!";
+                        }
+
+                        addChatMessage('bot', botReply, true, text);
+                    }
+                    else {
+                        if (normText.includes('plano')) {
+                            botReply = "Para el desarrollo de **Planos Arquitectónicos**, en ARQIA 4 definimos distribuciones optimizadas, plantas, cortes, fachadas y especificaciones técnicas completas para construcción y licencias.";
+                        } else if (normText.includes('cocina')) {
+                            botReply = "En **Remodelación de Cocinas**, trabajamos diseño de herrajes, cubiertas de granito o cuarzo, iluminación cálida y zonificación de trabajo en triángulo para máxima eficiencia.";
+                        } else if (normText.includes('fachada')) {
+                            botReply = "Para la **Remodelación de Fachadas**, combinamos volumetría, iluminación LED rasante, revestimientos en piedra o madera y acabados de alta durabilidad.";
+                        } else if (normText.includes('render') || normText.includes('3d')) {
+                            botReply = "Creamos **Renders Fotorrealistas y Modelado 3D** hiperdetallados para que visualices materiales, texturas, iluminación y espacio antes de colocar el primer ladrillo.";
+                        } else if (normText.includes('recorrido') || normText.includes('virtual')) {
+                            botReply = "Nuestros **Recorridos Virtuales 360°** e inmersivos te permiten caminar e interactuar virtualmente dentro de tu futuro proyecto arquitectónico.";
+                        } else if (normText.includes('hola') || normText.includes('buen')) {
+                            botReply = "¡Hola! Con gusto te asesoro. Platícame, ¿qué tipo de proyecto o espacio tienes en mente (casa, remodelación, planos, renders)?";
+                        } else {
+                            botReply = "Con gusto. En **ARQIA 4** analizamos los requerimientos de tu obra para coordinar una visita técnica y entregarte una propuesta detallada.";
+                        }
+
+                        addChatMessage('bot', botReply, true, text);
+                    }
+                }, 600);
+            };
+
+            aiSendBtn?.addEventListener('click', () => handleSendMessage());
+            aiInput?.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleSendMessage();
+            });
+
+            aiQuickSelect?.addEventListener('change', (e) => {
+                const selectedVal = e.target.value;
+                if (selectedVal) {
+                    handleSendMessage(selectedVal);
+                    e.target.selectedIndex = 0;
+                }
+            });
+
+            // RENDERS IA
+            const generateRenderBtn = document.getElementById('generate-render-btn');
+            const renderOutputContainer = document.getElementById('render-output-container');
+            const renderCanvas = document.getElementById('render-canvas');
+            const renderOutputImg = document.getElementById('render-output-img');
+            const renderLoader = document.getElementById('render-loader');
+            const renderBadge = document.getElementById('render-badge');
+            const renderBadgeStyle = document.getElementById('render-badge-style');
+            const renderBadgePrompt = document.getElementById('render-badge-prompt');
+
+            generateRenderBtn?.addEventListener('click', () => {
+                const promptInput = document.getElementById('render-prompt')?.value.trim();
+                const prompt = promptInput || 'Casa residencial moderna de 2 plantas con ventanales y acabados finos';
+                const styleSelect = document.getElementById('render-style');
+                const styleVal = styleSelect ? styleSelect.value : 'modern';
+                const styleText = styleSelect ? styleSelect.options[styleSelect.selectedIndex].text : 'Moderno & Minimalista';
+
+                renderOutputContainer?.classList.remove('hidden');
+                renderLoader?.classList.remove('hidden');
+                renderCanvas?.classList.add('hidden');
+                renderOutputImg?.classList.add('hidden');
+                renderBadge?.classList.add('hidden');
+
+                const styleFallbackImages = {
+                    modern: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop&q=80",
+                    brutalist: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&auto=format&fit=crop&q=80",
+                    warm: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&auto=format&fit=crop&q=80",
+                    mediterranean: "https://images.unsplash.com/photo-1613977257363-707ba9348227?w=800&auto=format&fit=crop&q=80"
+                };
+
+                const fallbackUrl = styleFallbackImages[styleVal] || styleFallbackImages.modern;
+                const fullPrompt = `Architectural 3D render photo of ${prompt}, style ${styleText}, 8k resolution, archdaily architecture, photorealistic lighting, octane render`;
+                const seed = Math.floor(Math.random() * 90000) + 10000;
+                const aiImageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=800&height=450&nologo=true&seed=${seed}`;
+
+                let hasRendered = false;
+
+                const displayRenderImage = (srcUrl) => {
+                    if (hasRendered) return;
+                    hasRendered = true;
+
+                    if (renderOutputImg) {
+                        renderOutputImg.src = srcUrl;
+                        
+                        renderOutputImg.onload = () => {
+                            renderLoader?.classList.add('hidden');
+                            renderOutputImg.classList.remove('hidden');
+                            if (renderBadge && renderBadgeStyle && renderBadgePrompt) {
+                                renderBadgeStyle.innerText = `✦ ESTILO ${styleText}`;
+                                renderBadgePrompt.innerText = `"${prompt}"`;
+                                renderBadge.classList.remove('hidden');
+                            }
+                        };
+
+                        renderOutputImg.onerror = () => {
+                            renderOutputImg.src = fallbackUrl;
+                            renderLoader?.classList.add('hidden');
+                            renderOutputImg.classList.remove('hidden');
+                            if (renderBadge && renderBadgeStyle && renderBadgePrompt) {
+                                renderBadgeStyle.innerText = `✦ ESTILO ${styleText}`;
+                                renderBadgePrompt.innerText = `"${prompt}"`;
+                                renderBadge.classList.remove('hidden');
+                            }
+                        };
+                    }
+                };
+
+                const testImg = new Image();
+                testImg.onload = () => displayRenderImage(aiImageUrl);
+                testImg.onerror = () => displayRenderImage(fallbackUrl);
+                testImg.src = aiImageUrl;
+
+                setTimeout(() => {
+                    if (!hasRendered) displayRenderImage(fallbackUrl);
+                }, 4000);
+            });
+        });
+    </script>
+</body>
+</html>
