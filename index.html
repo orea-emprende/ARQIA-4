@@ -1,0 +1,1885 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ef4444"/>
+    <title>ARQIA 4 - Tarjeta Digital</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: #020617 !important;
+            color: #f8fafc !important;
+            margin: 0;
+            padding: 16px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes rotate { to { transform: rotate(360deg); } }
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+        @keyframes waveBar {
+            0%, 100% { height: 8px; }
+            50% { height: 28px; }
+        }
+        
+        .animated-border-glow {
+            position: relative;
+            padding: 3px;
+            overflow: hidden;
+            border-radius: 9999px;
+        }
+        .animated-border-glow::before {
+            content: '';
+            position: absolute;
+            inset: -50%;
+            z-index: 0;
+            border-radius: inherit;
+            background: conic-gradient(from 180deg, #ef4444, #7f1d1d, #18181b, #ef4444);
+            animation: rotate 3s linear infinite;
+        }
+        .animated-border-glow > * { position: relative; z-index: 1; }
+        
+        .modal-content { transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: #ef4444; }
+
+        .tech-card {
+            background-color: rgba(15, 23, 42, 0.95);
+            border: 1px solid #1e293b;
+            border-radius: 24px;
+            box-shadow: 0 0 50px rgba(239, 68, 68, 0.18);
+            width: 100%;
+            max-width: 380px;
+            padding: 24px;
+            margin: 16px auto;
+        }
+
+        .btn-burned-red {
+            background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%);
+            color: #fecaca;
+            border: 1px solid #7f1d1d;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+        .btn-burned-red:hover, .btn-burned-red:focus, .btn-burned-red:active {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%) !important;
+            color: #ffffff !important;
+            border-color: #f87171 !important;
+            box-shadow: 0 0 30px rgba(255, 20, 20, 0.85) !important;
+            transform: scale(1.02);
+        }
+
+        .wave-bar {
+            width: 4px;
+            background-color: #ef4444;
+            border-radius: 9999px;
+            animation: waveBar 1s ease-in-out infinite;
+        }
+
+        .btn-black-gray-glow {
+            background: linear-gradient(135deg, #020617 0%, #1e293b 50%, #334155 100%);
+            color: #f1f5f9;
+            border: 1px solid #475569;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-black-gray-glow:hover, .btn-black-gray-glow:focus, .btn-black-gray-glow:active {
+            background: #ffffff !important;
+            color: #020617 !important;
+            border-color: #ffffff !important;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.9) !important;
+            transform: scale(1.02);
+        }
+        .btn-black-gray-glow:hover svg, .btn-black-gray-glow:focus svg, .btn-black-gray-glow:active svg {
+            color: #020617 !important;
+        }
+
+        .btn-gray-translucent-glow {
+            background: linear-gradient(135deg, #020617 0%, #1e293b 100%);
+            color: #f1f5f9;
+            border: 1px solid #475569;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-gray-translucent-glow:hover, .btn-gray-translucent-glow:focus, .btn-gray-translucent-glow:active {
+            background: rgba(100, 116, 139, 0.4) !important;
+            color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 0 25px rgba(148, 163, 184, 0.6) !important;
+            backdrop-filter: blur(8px);
+            transform: scale(1.02);
+        }
+
+        #ai-quick-select {
+            background-color: rgba(2, 6, 23, 0.9);
+            color: #f1f5f9;
+            border: 1px solid #ef4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #ai-quick-select:hover, #ai-quick-select:focus {
+            border-color: #f87171 !important;
+            box-shadow: 0 0 18px rgba(239, 68, 68, 0.6) !important;
+            background-color: rgba(15, 23, 42, 0.95) !important;
+        }
+        #ai-quick-select option {
+            background-color: #090d16;
+            color: #cbd5e1;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 flex flex-col items-center justify-center min-h-screen p-4 sm:p-6 relative overflow-x-hidden">
+
+    <!-- Ambient Tech Glow -->
+    <div class="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-600/15 rounded-full blur-[120px] pointer-events-none z-0"></div>
+
+    <div class="tech-card relative z-10">
+
+        <!-- HEADER / PERFIL -->
+        <header class="flex flex-col items-center text-center">
+            <div class="relative w-44 h-44 flex items-center justify-center mx-auto">
+                <div class="animated-border-glow w-full h-full rounded-full shadow-[0_0_30px_rgba(239,68,68,0.45)] flex items-center justify-center">
+                    <div class="w-full h-full rounded-full bg-slate-950 flex items-center justify-center p-3 overflow-hidden">
+                        <img 
+                            id="display-photo"
+                            src="https://i.postimg.cc/J7KvQXmy/5555.png" 
+                            alt="Foto de perfil ARQIA 4" 
+                            class="max-w-full max-h-full object-contain object-center block mx-auto my-auto"
+                            onerror="this.onerror=null; this.src='https://placehold.co/160x160/EF4444/FFFFFF?text=ARQIA';"
+                        >
+                    </div>
+                </div>
+                <span class="absolute bottom-1.5 right-1.5 bg-red-600 p-2 rounded-full border-2 border-slate-900 z-10 shadow-lg shadow-red-600/50">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </span>
+            </div>
+            
+            <h1 id="display-name" class="text-3xl font-extrabold text-white mt-4 tracking-tight">ARQIA 4</h1>
+            <p id="display-title" class="text-red-500 font-semibold text-base mt-1 tracking-wide uppercase text-xs">Creación e Innovación</p>
+            <p id="display-desc" class="text-slate-400 mt-3 text-sm max-w-xs leading-relaxed">
+                Empresa especializada en diseño arquitectónico, modelado 3D, renders, Que combina creatividad, técnica y tecnología.
+            </p>
+        </header>
+
+        <section class="flex justify-center items-center gap-3.5 mt-6">
+             <!-- Location Icon -->
+             <a id="link-map" href="https://maps.google.com/?q=Le%C3%B3n,+Gto." target="_blank" rel="noopener noreferrer" class="p-2.5 bg-slate-800/80 text-red-500 rounded-xl hover:bg-red-500/20 border border-red-500/40 hover:border-red-400/80 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-[0_0_12px_rgba(239,68,68,0.3)] hover:shadow-[0_0_20px_rgba(239,68,68,0.65)] active:shadow-[0_0_28px_rgba(239,68,68,0.95)] flex items-center justify-center outline-none" title="León, Gto.">
+                 <svg class="w-7 h-7 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                 <span id="display-address" class="hidden">León, Gto.</span>
+             </a>
+
+             <!-- WhatsApp Icon -->
+             <a id="link-whatsapp" href="https://wa.me/524776592182" target="_blank" rel="noopener noreferrer" class="p-2.5 bg-slate-800/80 text-emerald-400 rounded-xl hover:bg-emerald-500/20 hover:border-emerald-500/60 border border-emerald-500/30 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-[0_0_12px_rgba(16,185,129,0.2)] hover:shadow-[0_0_20px_rgba(16,185,129,0.6)] active:shadow-[0_0_28px_rgba(16,185,129,0.9)] flex items-center justify-center outline-none" title="WhatsApp">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" viewBox="0 0 16 16" class="w-7 h-7 shrink-0">
+                     <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+                 </svg>
+             </a>
+
+             <!-- Instagram Icon -->
+             <a id="link-instagram" href="https://www.instagram.com/arqia_4/" target="_blank" rel="noopener noreferrer" class="p-2.5 bg-slate-800/80 rounded-xl hover:bg-slate-700/50 border border-fuchsia-500/40 hover:border-fuchsia-400/80 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-[0_0_12px_rgba(217,70,239,0.3)] hover:shadow-[0_0_20px_rgba(217,70,239,0.65)] active:shadow-[0_0_28px_rgba(217,70,239,0.95)] flex items-center justify-center outline-none" title="Instagram">
+                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="w-7 h-7 shrink-0">
+                     <defs>
+                         <linearGradient id="igIconGradDirect" x1="0%" y1="100%" x2="100%" y2="0%">
+                             <stop offset="0%" stop-color="#f97316" />
+                             <stop offset="30%" stop-color="#f43f5e" />
+                             <stop offset="70%" stop-color="#d946ef" />
+                             <stop offset="100%" stop-color="#8b5cf6" />
+                         </linearGradient>
+                     </defs>
+                     <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" stroke="url(#igIconGradDirect)" stroke-width="2.3" />
+                     <circle cx="12" cy="12" r="4.2" stroke="url(#igIconGradDirect)" stroke-width="2.2" />
+                     <circle cx="17.2" cy="6.8" r="1.2" fill="url(#igIconGradDirect)" />
+                 </svg>
+             </a>
+
+             <!-- TikTok Icon -->
+             <a id="link-tiktok" href="https://www.tiktok.com/@arqia_4" target="_blank" rel="noopener noreferrer" class="p-2.5 bg-slate-800/80 rounded-xl hover:bg-cyan-500/20 border border-cyan-500/40 hover:border-cyan-400/80 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-[0_0_12px_rgba(6,182,212,0.3)] hover:shadow-[0_0_20px_rgba(6,182,212,0.65)] active:shadow-[0_0_28px_rgba(6,182,212,0.95)] flex items-center justify-center outline-none" title="TikTok">
+                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-7 h-7 shrink-0 text-cyan-400">
+                     <path d="M19.589 6.686a4.793 4.793 0 0 1-3.77-4.245V2h-3.445v13.672a2.896 2.896 0 0 1-2.901 2.883 2.892 2.892 0 0 1-2.888-2.883 2.892 2.892 0 0 1 2.888-2.883c.367 0 .714.073 1.031.205V9.45a6.31 6.31 0 0 0-1.031-.086 6.337 6.337 0 0 0-6.338 6.333A6.337 6.337 0 0 0 9.574 22a6.337 6.337 0 0 0 6.338-6.333V9.282a8.163 8.163 0 0 0 4.777 1.528V7.365a4.854 4.854 0 0 1-1.1-.679z"/>
+                 </svg>
+             </a>
+        </section>
+
+        <footer class="mt-8 flex flex-col gap-3">
+            <!-- SERVICIOS -->
+            <button id="services-btn" class="group flex items-center justify-center w-full bg-red-950/70 text-slate-100 font-bold py-3 px-4 rounded-xl text-sm sm:text-base border border-red-400 shadow-[0_0_12px_rgba(239,68,68,0.35)] hover:bg-red-900/80 hover:text-white hover:border-red-300 hover:shadow-[0_0_22px_rgba(239,68,68,0.7)] active:shadow-[0_0_35px_rgba(239,68,68,1)] active:scale-95 transition-all duration-300">
+                <svg class="w-5 h-5 mr-3 text-red-500 group-hover:text-red-400 transition-colors duration-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                <span>Nuestros Servicios</span>
+            </button>
+
+            <!-- BOTÓN COTIZADOR & ASISTENTE IA -->
+            <button id="ai-assistant-btn" class="group flex items-center justify-center w-full btn-burned-red font-bold py-3 px-4 rounded-xl text-sm sm:text-base">
+                <svg class="w-5 h-5 mr-3 text-red-500 fill-red-500 drop-shadow-[0_0_12px_rgba(239,68,68,1)] transition-transform duration-300 group-hover:scale-110 shrink-0" viewBox="0 0 24 24"><path d="M13 2L3 14h7v8l10-12h-7l3-8z"/></svg>
+                <span>Hola, Soy tu asistente ARIA</span>
+            </button>
+
+            <!-- BOTÓN GUARDAR CONTACTO -->
+            <button id="save-contact-btn" class="group flex items-center justify-center w-full bg-emerald-950/70 text-emerald-300 font-bold py-3 px-4 rounded-xl text-sm sm:text-base border border-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.3)] hover:bg-emerald-900/80 hover:text-emerald-200 hover:border-emerald-300 hover:shadow-[0_0_22px_rgba(52,211,153,0.7)] active:shadow-[0_0_35px_rgba(52,211,153,1)] active:scale-95 transition-all duration-300">
+                <svg class="w-5 h-5 mr-3 text-emerald-400 group-hover:text-emerald-200 transition-colors duration-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                <span>Guardar Contacto</span>
+            </button>
+
+            <!-- COMPARTIR / QR -->
+            <button id="show-qr-btn" class="group flex items-center justify-center w-full btn-black-gray-glow font-bold py-3 px-4 rounded-xl text-sm sm:text-base">
+                 <svg class="w-5 h-5 mr-3 text-slate-400 transition-colors duration-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                 <span>Compartir / QR</span>
+            </button>
+
+            <!-- INSTRUCCIONES DE INSTALACIÓN -->
+            <button id="show-instructions-btn" class="text-center w-full text-slate-500 font-medium text-xs py-2 hover:text-red-400 transition-colors">
+                ¿Cómo instalar en mi móvil gratis?
+            </button>
+        </footer>
+    </div>
+
+    <!-- MODAL ASISTENTE IA -->
+    <div id="ai-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        <!-- ... existing modal content ... -->
+    </div>
+
+    <!-- MODAL REGISTRO DE PLATAFORMA -->
+    <div id="newsletter-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        <div class="modal-content bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full relative scale-95 opacity-0 flex flex-col border border-red-500/40 overflow-hidden" style="max-height: 90vh;">
+            <div class="p-4 bg-slate-950 text-white flex items-center justify-between border-b border-slate-800">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                    <div>
+                        <h2 class="font-bold text-base leading-tight">REGISTRO DE PLATAFORMA</h2>
+                        <p class="text-[10px] text-red-400">Crea tu usuario para obtener 24h de acceso gratuito</p>
+                    </div>
+                </div>
+                <button id="close-newsletter-modal-btn" class="text-slate-400 hover:text-white p-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            
+            <form id="newsletter-form" class="p-5 overflow-y-auto space-y-3 text-slate-300 text-sm">
+                <p class="text-xs text-slate-400">Crea tu cuenta para acceder al navegador de videos, tips de software y recursos descargables de ARQIA 4.</p>
+                
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-200 text-xs">Nombre completo:</label>
+                    <input type="text" id="subscriber-name" required placeholder="Ej: María López" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-xs text-slate-200">
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-200 text-xs">Nombre de usuario:</label>
+                    <input type="text" id="subscriber-username" required placeholder="Ej: marialopez_arq" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-xs text-slate-200">
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-200 text-xs">Correo electrónico:</label>
+                    <input type="email" id="subscriber-email" required placeholder="correo@ejemplo.com" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-xs text-slate-200">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold mb-1 text-slate-200 text-xs">Contraseña:</label>
+                        <input type="password" id="subscriber-password" required placeholder="••••••••" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-xs text-slate-200">
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1 text-slate-200 text-xs">Confirmar contraseña:</label>
+                        <input type="password" id="subscriber-confirm-password" required placeholder="••••••••" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-xs text-slate-200">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-1 text-slate-200 text-xs">Tipo de perfil:</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="profile_type" value="cliente" checked class="peer sr-only">
+                            <div class="p-2.5 bg-emerald-950/40 text-emerald-200 border border-emerald-400 rounded-xl text-center peer-checked:border-emerald-300 peer-checked:bg-emerald-900/80 peer-checked:text-white peer-checked:shadow-[0_0_15px_rgba(52,211,153,0.8)] hover:bg-emerald-900/50 transition-all duration-300 flex items-center justify-center gap-1.5">
+                                <span class="text-base">🏡</span>
+                                <span class="font-bold text-xs">Cliente</span>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="profile_type" value="estudiante" class="peer sr-only">
+                            <div class="p-2.5 bg-red-950/40 text-red-200 border border-red-400 rounded-xl text-center peer-checked:border-red-300 peer-checked:bg-red-900/80 peer-checked:text-white peer-checked:shadow-[0_0_15px_rgba(239,68,68,0.8)] hover:bg-red-900/50 transition-all duration-300 flex items-center justify-center gap-1.5">
+                                <span class="text-base">🎓</span>
+                                <span class="font-bold text-xs">Estudiante</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="newsletter-error" class="hidden p-2.5 bg-red-950/80 border border-red-500/50 rounded-xl text-red-300 text-xs text-center font-medium"></div>
+
+                <div id="newsletter-success" class="hidden p-2.5 bg-emerald-950/80 border border-emerald-500/50 rounded-xl text-emerald-300 text-xs text-center font-medium">
+                    ✓ ¡Cuenta registrada con éxito! Redirigiendo a la plataforma...
+                </div>
+
+                <button type="submit" id="submit-newsletter-btn" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 px-4 rounded-xl border border-red-400 shadow-[0_0_14px_rgba(239,68,68,0.4)] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 mt-2">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                    <span>Crear Cuenta & Activar Acceso 24h</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- NUEVO NAVEGADOR DE PLATAFORMA ARQIA 4 (HUB DE VIDEOS Y RECURSOS) -->
+    <div id="platform-hub-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-lg flex items-center justify-center p-2 sm:p-4 z-50">
+        <div class="modal-content bg-slate-900 rounded-2xl shadow-2xl max-w-2xl w-full relative scale-95 opacity-0 flex flex-col border border-red-500/50 overflow-hidden" style="height: 92vh; max-height: 820px;">
+            
+            <!-- HEADER DE NAVEGADOR CON CUENTA REGRESIVA 24H -->
+            <div class="p-4 bg-slate-950 text-white flex flex-col border-b border-slate-800 gap-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-full bg-red-600/20 border border-red-500/60 flex items-center justify-center text-red-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <div>
+                            <h2 class="font-extrabold text-sm sm:text-base leading-tight">PLATAFORMA ARQIA 4</h2>
+                            <p id="platform-user-greeting" class="text-xs text-red-400 font-medium">Bienvenido a la biblioteca exclusiva</p>
+                        </div>
+                    </div>
+                    <button id="close-platform-hub-btn" class="text-slate-400 hover:text-white p-1">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <!-- BANNER ALERTA 24 HORAS CON CUENTA REGRESIVA Y MEMBRESÍA -->
+                <div class="bg-gradient-to-r from-red-950/80 via-slate-900 to-slate-950 border border-red-500/40 p-3 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
+                    <div class="flex items-center gap-3">
+                        <div class="shrink-0 bg-red-600/20 text-red-400 p-2 rounded-lg border border-red-500/30">
+                            <svg class="w-6 h-6 animate-pulse text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-300 font-semibold">
+                                Tiempo de Prueba Gratuita Activa: <span id="trial-timer" class="text-red-400 font-extrabold text-sm font-mono ml-1">23:59:59</span>
+                            </p>
+                            <p class="text-[11px] text-slate-400 leading-tight">
+                                Disfruta los beneficios sin costo por 24 horas. Al expirar, mantén tu acceso ilimitado por sólo <span class="text-emerald-400 font-bold">$199 MXN / mes</span>.
+                            </p>
+                        </div>
+                    </div>
+                    <button id="subscribe-membership-btn" class="shrink-0 w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3.5 py-1.5 rounded-lg text-xs shadow-md border border-emerald-400 transition-all duration-300">
+                        Suscripción $199/mes
+                    </button>
+                </div>
+            </div>
+
+            <!-- CONTENIDO PRINCIPAL: NAVEGADOR Y RECURSOS -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-6 bg-slate-900/60">
+                
+                <!-- BARRA DE BÚSQUEDA POR PALABRAS CLAVE -->
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                    <input type="text" id="platform-search-input" placeholder="Buscar por palabra clave (ej: bloques, revit, iluminación, texturas...)" class="w-full pl-10 pr-10 py-2.5 bg-slate-950 border border-slate-700/80 rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all shadow-inner">
+                    <button id="clear-search-btn" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <!-- SECCIÓN 1: VIDEOS Y TIPS RÁPIDOS DE SOFTWARE -->
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                            <span>🎬</span> Tips Rápidos en Video (Softwares)
+                        </h3>
+                        <span class="text-[10px] bg-slate-800 text-slate-400 border border-slate-700 px-2 py-0.5 rounded-full">Actualizado hoy</span>
+                    </div>
+
+                    <!-- PESTAÑAS DE NAVEGACIÓN DE SOFTWARES -->
+                    <div class="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none text-xs">
+                        <button class="software-tab active bg-red-600 text-white px-3 py-1.5 rounded-xl font-bold whitespace-nowrap shadow-sm" data-filter="all">Todos los Software</button>
+                        <button class="software-tab bg-slate-800 text-slate-300 hover:text-white px-3 py-1.5 rounded-xl font-medium whitespace-nowrap border border-slate-700" data-filter="autocad">AutoCAD</button>
+                        <button class="software-tab bg-slate-800 text-slate-300 hover:text-white px-3 py-1.5 rounded-xl font-medium whitespace-nowrap border border-slate-700" data-filter="revit">Revit</button>
+                        <button class="software-tab bg-slate-800 text-slate-300 hover:text-white px-3 py-1.5 rounded-xl font-medium whitespace-nowrap border border-slate-700" data-filter="lumion">Lumion</button>
+                        <button class="software-tab bg-slate-800 text-slate-300 hover:text-white px-3 py-1.5 rounded-xl font-medium whitespace-nowrap border border-slate-700" data-filter="sketchup">SketchUp</button>
+                        <button class="software-tab bg-slate-800 text-slate-300 hover:text-white px-3 py-1.5 rounded-xl font-medium whitespace-nowrap border border-slate-700" data-filter="illustrator">Illustrator</button>
+                    </div>
+
+                    <!-- GRID DE TARJETAS DE VIDEOS -->
+                    <div id="video-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-3">
+                        <!-- AutoCAD Video -->
+                        <div class="video-card bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-md hover:border-red-500/50 transition-all group" data-category="autocad">
+                            <div class="relative aspect-video bg-slate-900 overflow-hidden cursor-pointer play-video-btn" data-title="Comandos Secretos de AutoCAD" data-software="AutoCAD" data-url="https://www.youtube.com/embed/dQw4w9WgXcQ">
+                                <img src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=500&q=80" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="AutoCAD Tip">
+                                <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                    <div class="w-10 h-10 bg-red-600/90 text-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                        <svg class="w-5 h-5 ml-0.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                    </div>
+                                </div>
+                                <span class="absolute top-2 left-2 bg-red-950/90 border border-red-500/50 text-red-400 text-[10px] font-bold px-2 py-0.5 rounded-md">AutoCAD</span>
+                                <span class="absolute bottom-2 right-2 bg-black/80 text-slate-300 text-[10px] font-mono px-1.5 py-0.5 rounded">03:45</span>
+                            </div>
+                            <div class="p-3">
+                                <h4 class="font-bold text-xs text-white group-hover:text-red-400 transition-colors">10 Comandos Secretos para Dibujar 2x Más Rápido</h4>
+                                <p class="text-[11px] text-slate-400 mt-1">Aprende optimización de capas, bloques dinámicos y atajos técnicos.</p>
+                            </div>
+                        </div>
+
+                        <!-- Revit Video -->
+                        <div class="video-card bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-md hover:border-red-500/50 transition-all group" data-category="revit">
+                            <div class="relative aspect-video bg-slate-900 overflow-hidden cursor-pointer play-video-btn" data-title="Familias Paramétricas en Revit" data-software="Revit" data-url="https://www.youtube.com/embed/dQw4w9WgXcQ">
+                                <img src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=500&q=80" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="Revit Tip">
+                                <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                    <div class="w-10 h-10 bg-red-600/90 text-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                        <svg class="w-5 h-5 ml-0.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                    </div>
+                                </div>
+                                <span class="absolute top-2 left-2 bg-cyan-950/90 border border-cyan-500/50 text-cyan-400 text-[10px] font-bold px-2 py-0.5 rounded-md">Revit BIM</span>
+                                <span class="absolute bottom-2 right-2 bg-black/80 text-slate-300 text-[10px] font-mono px-1.5 py-0.5 rounded">05:20</span>
+                            </div>
+                            <div class="p-3">
+                                <h4 class="font-bold text-xs text-white group-hover:text-red-400 transition-colors">Creación de Familias Paramétricas desde Cero</h4>
+                                <p class="text-[11px] text-slate-400 mt-1">Ajusta dimensiones, materiales y parámetros de cuantificación rápida.</p>
+                            </div>
+                        </div>
+
+                        <!-- Lumion Video -->
+                        <div class="video-card bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-md hover:border-red-500/50 transition-all group" data-category="lumion">
+                            <div class="relative aspect-video bg-slate-900 overflow-hidden cursor-pointer play-video-btn" data-title="Iluminación Fotorrealista Lumion" data-software="Lumion" data-url="https://www.youtube.com/embed/dQw4w9WgXcQ">
+                                <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=500&q=80" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="Lumion Tip">
+                                <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                    <div class="w-10 h-10 bg-red-600/90 text-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                        <svg class="w-5 h-5 ml-0.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                    </div>
+                                </div>
+                                <span class="absolute top-2 left-2 bg-emerald-950/90 border border-emerald-500/50 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-md">Lumion</span>
+                                <span class="absolute bottom-2 right-2 bg-black/80 text-slate-300 text-[10px] font-mono px-1.5 py-0.5 rounded">04:15</span>
+                            </div>
+                            <div class="p-3">
+                                <h4 class="font-bold text-xs text-white group-hover:text-red-400 transition-colors">Efectos de Iluminación y Ray Tracing Realista</h4>
+                                <p class="text-[11px] text-slate-400 mt-1">Configuración de cielos reales, sol y sombras suaves para renders.</p>
+                            </div>
+                        </div>
+
+                        <!-- SketchUp Video -->
+                        <div class="video-card bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-md hover:border-red-500/50 transition-all group" data-category="sketchup">
+                            <div class="relative aspect-video bg-slate-900 overflow-hidden cursor-pointer play-video-btn" data-title="Modelado Orgánico en SketchUp" data-software="SketchUp" data-url="https://www.youtube.com/embed/dQw4w9WgXcQ">
+                                <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=500&q=80" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="SketchUp Tip">
+                                <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                    <div class="w-10 h-10 bg-red-600/90 text-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                        <svg class="w-5 h-5 ml-0.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                    </div>
+                                </div>
+                                <span class="absolute top-2 left-2 bg-amber-950/90 border border-amber-500/50 text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-md">SketchUp</span>
+                                <span class="absolute bottom-2 right-2 bg-black/80 text-slate-300 text-[10px] font-mono px-1.5 py-0.5 rounded">02:50</span>
+                            </div>
+                            <div class="p-3">
+                                <h4 class="font-bold text-xs text-white group-hover:text-red-400 transition-colors">Modelado Limpio y Plugins Esenciales 3D</h4>
+                                <p class="text-[11px] text-slate-400 mt-1">Plugins indispensables para terrenos, curvas y geometría compleja.</p>
+                            </div>
+                        </div>
+
+                        <!-- Illustrator Video -->
+                        <div class="video-card bg-slate-950 border border-slate-800 rounded-xl overflow-hidden shadow-md hover:border-red-500/50 transition-all group" data-category="illustrator">
+                            <div class="relative aspect-video bg-slate-900 overflow-hidden cursor-pointer play-video-btn" data-title="Diagramas y Láminas en Illustrator" data-software="Illustrator" data-url="https://www.youtube.com/embed/dQw4w9WgXcQ">
+                                <img src="https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=500&q=80" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="Illustrator Tip">
+                                <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                    <div class="w-10 h-10 bg-red-600/90 text-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                        <svg class="w-5 h-5 ml-0.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                    </div>
+                                </div>
+                                <span class="absolute top-2 left-2 bg-fuchsia-950/90 border border-fuchsia-500/50 text-fuchsia-400 text-[10px] font-bold px-2 py-0.5 rounded-md">Illustrator</span>
+                                <span class="absolute bottom-2 right-2 bg-black/80 text-slate-300 text-[10px] font-mono px-1.5 py-0.5 rounded">04:40</span>
+                            </div>
+                            <div class="p-3">
+                                <h4 class="font-bold text-xs text-white group-hover:text-red-400 transition-colors">Diagramación y Láminas de Presentación</h4>
+                                <p class="text-[11px] text-slate-400 mt-1">Ajuste de vectores, escalas humanas y diagramación de axonométricos.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 2: RECURSOS DESCARGABLES EXCLUSIVOS ARQIA 4 -->
+                <div class="pt-2 border-t border-slate-800">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                            <span>📦</span> Descarga de Recursos ARQIA 4
+                        </h3>
+                        <span class="text-[10px] text-red-400 font-semibold">Descarga directa gratis por 24h</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Recurso 1 -->
+                        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex items-center justify-between gap-3 hover:border-slate-700 transition-all">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-red-950/80 border border-red-500/40 text-red-400 flex items-center justify-center font-bold text-xs shrink-0">
+                                    DWG
+                                </div>
+                                <div>
+                                    <h5 class="font-bold text-xs text-slate-200 leading-tight">Pack Bloques AutoCAD 2D/3D</h5>
+                                    <p class="text-[10px] text-slate-400 mt-0.5">+500 bloques de vegetación y mobiliario</p>
+                                </div>
+                            </div>
+                            <button class="download-resource-btn shrink-0 bg-slate-800 hover:bg-red-600 text-white font-semibold px-3 py-1.5 rounded-lg text-xs border border-slate-700 transition-all flex items-center gap-1" data-filename="Pack_Bloques_AutoCAD_ARQIA4.dwg">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                Descargar
+                            </button>
+                        </div>
+
+                        <!-- Recurso 2 -->
+                        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex items-center justify-between gap-3 hover:border-slate-700 transition-all">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-cyan-950/80 border border-cyan-500/40 text-cyan-400 flex items-center justify-center font-bold text-xs shrink-0">
+                                    RVT
+                                </div>
+                                <div>
+                                    <h5 class="font-bold text-xs text-slate-200 leading-tight">Familias Revit Paramétricas</h5>
+                                    <p class="text-[10px] text-slate-400 mt-0.5">Puertas, ventanas y mobiliario listo</p>
+                                </div>
+                            </div>
+                            <button class="download-resource-btn shrink-0 bg-slate-800 hover:bg-red-600 text-white font-semibold px-3 py-1.5 rounded-lg text-xs border border-slate-700 transition-all flex items-center gap-1" data-filename="Familias_Revit_Parametricas_ARQIA4.rvt">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                Descargar
+                            </button>
+                        </div>
+
+                        <!-- Recurso 3 -->
+                        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex items-center justify-between gap-3 hover:border-slate-700 transition-all">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-amber-950/80 border border-amber-500/40 text-amber-400 flex items-center justify-center font-bold text-xs shrink-0">
+                                    PBR
+                                </div>
+                                <div>
+                                    <h5 class="font-bold text-xs text-slate-200 leading-tight">Texturas PBR 4K Fotorrealistas</h5>
+                                    <p class="text-[10px] text-slate-400 mt-0.5">Marmol, madera, concreto y piedra</p>
+                                </div>
+                            </div>
+                            <button class="download-resource-btn shrink-0 bg-slate-800 hover:bg-red-600 text-white font-semibold px-3 py-1.5 rounded-lg text-xs border border-slate-700 transition-all flex items-center gap-1" data-filename="Pack_Texturas_PBR_4K_ARQIA4.zip">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                Descargar
+                            </button>
+                        </div>
+
+                        <!-- Recurso 4 -->
+                        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex items-center justify-between gap-3 hover:border-slate-700 transition-all">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-fuchsia-950/80 border border-fuchsia-500/40 text-fuchsia-400 flex items-center justify-center font-bold text-xs shrink-0">
+                                    AI
+                                </div>
+                                <div>
+                                    <h5 class="font-bold text-xs text-slate-200 leading-tight">Escalas Humana & Siluetas Vector</h5>
+                                    <p class="text-[10px] text-slate-400 mt-0.5">Vectores para láminas de arquitectura</p>
+                                </div>
+                            </div>
+                            <button class="download-resource-btn shrink-0 bg-slate-800 hover:bg-red-600 text-white font-semibold px-3 py-1.5 rounded-lg text-xs border border-slate-700 transition-all flex items-center gap-1" data-filename="Escalas_Humanas_Vectores_ARQIA4.ai">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                Descargar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL REPRODUCTOR DE VIDEO -->
+    <div id="video-player-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        <div class="modal-content bg-slate-900 rounded-2xl shadow-2xl max-w-xl w-full relative scale-95 opacity-0 flex flex-col border border-red-500/40 overflow-hidden">
+            <div class="p-4 bg-slate-950 text-white flex items-center justify-between border-b border-slate-800">
+                <div class="flex items-center gap-2">
+                    <span id="player-software-tag" class="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">Software</span>
+                    <h3 id="player-video-title" class="font-bold text-xs sm:text-sm truncate">Reproduciendo Tutorial</h3>
+                </div>
+                <button id="close-video-player-btn" class="text-slate-400 hover:text-white p-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="relative aspect-video bg-black flex items-center justify-center">
+                <div class="p-6 text-center text-slate-400 space-y-2">
+                    <svg class="w-12 h-12 text-red-500 mx-auto animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <p id="player-status-msg" class="text-xs font-semibold text-white">Cargando lección de la plataforma...</p>
+                    <p class="text-[11px] text-slate-500">Beneficio activo de tu prueba 24 horas ARQIA 4</p>
+                </div>
+            </div>
+            <div class="p-4 bg-slate-950 border-t border-slate-800 flex justify-between items-center text-xs text-slate-400">
+                <span>Plataforma ARQIA PRO</span>
+                <button id="close-player-bottom-btn" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-1.5 px-3 rounded-lg">Cerrar Reproductor</button>
+            </div>
+        </div>
+    </div>
+    <!-- MODAL SERVICIOS ARQUITECTÓNICOS -->
+    <div id="services-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        <div class="modal-content bg-slate-900 rounded-2xl shadow-2xl max-w-lg w-full relative scale-95 opacity-0 flex flex-col border border-red-500/40 overflow-hidden" style="height: 88vh; max-height: 750px;">
+            <div class="p-5 border-b border-slate-800 flex-shrink-0 relative bg-slate-950 rounded-t-2xl">
+                <h2 class="text-xl sm:text-2xl font-extrabold text-white text-center tracking-tight">Nuestros Servicios</h2>
+                <p class="text-center text-slate-400 text-xs sm:text-sm mt-1">Explora nuestros servicios navegando con las flechas</p>
+                <button id="close-services-modal-btn" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            
+            <div class="overflow-y-auto p-4 sm:p-5 space-y-4 flex-1">
+                
+                <!-- PESTAÑA DESPLEGABLE: SERVICIOS ARQUITECTÓNICOS -->
+                <div class="border border-red-500/40 rounded-2xl overflow-hidden bg-slate-950/80 shadow-[0_0_20px_rgba(239,68,68,0.15)] transition-all">
+                    <button id="toggle-main-services-btn" class="w-full flex items-center justify-between p-3.5 bg-slate-900/90 text-white font-bold text-sm sm:text-base hover:bg-slate-800 transition-all border-b border-slate-800/80 group">
+                        <span class="flex items-center gap-2 text-red-400 group-hover:text-red-300">
+                            <svg class="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 20h16L4 4v16z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 17h6L7 11v6z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 20v-2M11 20v-2M14 20v-2"/></svg>
+                            Nuestros Servicios
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] sm:text-xs bg-red-950 text-red-400 border border-red-500/30 px-2 py-0.5 rounded-full font-semibold">5 servicios</span>
+                            <svg id="services-chevron" class="w-4 h-4 text-red-400 transition-transform duration-300 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                    </button>
+
+                    <div id="main-services-content" class="p-3 space-y-2 border-t border-slate-800/80 transition-all">
+                        <!-- 1. Planos -->
+                        <div class="service-item bg-slate-900/90 border border-slate-800 hover:border-red-500/60 p-2.5 sm:p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-slate-800/80 hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] group" data-service-key="planos">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-lg bg-red-950/70 border border-red-500/40 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 17L17 7M7 7v10h10"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 11h2M9 14h4"/></svg>
+                                </div>
+                                <span class="font-bold text-slate-200 text-xs sm:text-sm group-hover:text-white transition-colors">Planos Arquitectónicos</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-1 text-red-400 group-hover:translate-x-0.5 transition-transform">
+                                    <span class="text-[10px] font-semibold text-slate-400 group-hover:text-red-400 hidden sm:inline">Ver detalles</span>
+                                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </div>
+                                <label class="service-checkbox-wrapper relative flex items-center cursor-pointer p-1" onclick="event.stopPropagation()">
+                                    <input type="checkbox" class="service-checkbox sr-only" data-service-title="Planos Arquitectónicos">
+                                    <div class="checkbox-box w-5 h-5 rounded-md border border-slate-600 bg-slate-950 flex items-center justify-center transition-all duration-200">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 2. Gráfica -->
+                        <div class="service-item bg-slate-900/90 border border-slate-800 hover:border-red-500/60 p-2.5 sm:p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-slate-800/80 hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] group" data-service-key="grafica">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-lg bg-red-950/70 border border-red-500/40 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 13.5c.5-1.5.5-3.5 0-5C18 5 15 4 12 4S6 5 4.5 8.5c-1 2.5-.5 5.5 1 7.5 2 2.5 5 3 6.5 3 1.5 0 2.5-.8 2.5-2 0-.8.5-1.5 1.5-1.5h1.5c1.2 0 2-.8 2-2z"/><circle cx="7.5" cy="9.5" r="1" fill="currentColor"/><circle cx="10.5" cy="7.5" r="1" fill="currentColor"/><circle cx="14.5" cy="7.5" r="1" fill="currentColor"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17l4 4m-2-6l3.5-3.5"/></svg>
+                                </div>
+                                <span class="font-bold text-slate-200 text-xs sm:text-sm group-hover:text-white transition-colors">Representación Gráfica</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-1 text-red-400 group-hover:translate-x-0.5 transition-transform">
+                                    <span class="text-[10px] font-semibold text-slate-400 group-hover:text-red-400 hidden sm:inline">Ver detalles</span>
+                                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </div>
+                                <label class="service-checkbox-wrapper relative flex items-center cursor-pointer p-1" onclick="event.stopPropagation()">
+                                    <input type="checkbox" class="service-checkbox sr-only" data-service-title="Representación Gráfica">
+                                    <div class="checkbox-box w-5 h-5 rounded-md border border-slate-600 bg-slate-950 flex items-center justify-center transition-all duration-200">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 3. Modelado 3D -->
+                        <div class="service-item bg-slate-900/90 border border-slate-800 hover:border-red-500/60 p-2.5 sm:p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-slate-800/80 hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] group" data-service-key="modelado3d">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-lg bg-red-950/70 border border-red-500/40 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                </div>
+                                <span class="font-bold text-slate-200 text-xs sm:text-sm group-hover:text-white transition-colors">Modelado 3D</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-1 text-red-400 group-hover:translate-x-0.5 transition-transform">
+                                    <span class="text-[10px] font-semibold text-slate-400 group-hover:text-red-400 hidden sm:inline">Ver detalles</span>
+                                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </div>
+                                <label class="service-checkbox-wrapper relative flex items-center cursor-pointer p-1" onclick="event.stopPropagation()">
+                                    <input type="checkbox" class="service-checkbox sr-only" data-service-title="Modelado 3D">
+                                    <div class="checkbox-box w-5 h-5 rounded-md border border-slate-600 bg-slate-950 flex items-center justify-center transition-all duration-200">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 4. Renders -->
+                        <div class="service-item bg-slate-900/90 border border-slate-800 hover:border-red-500/60 p-2.5 sm:p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-slate-800/80 hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] group" data-service-key="renders">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-lg bg-red-950/70 border border-red-500/40 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                </div>
+                                <span class="font-bold text-slate-200 text-xs sm:text-sm group-hover:text-white transition-colors">Renders Fotorrealistas</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-1 text-red-400 group-hover:translate-x-0.5 transition-transform">
+                                    <span class="text-[10px] font-semibold text-slate-400 group-hover:text-red-400 hidden sm:inline">Ver detalles</span>
+                                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </div>
+                                <label class="service-checkbox-wrapper relative flex items-center cursor-pointer p-1" onclick="event.stopPropagation()">
+                                    <input type="checkbox" class="service-checkbox sr-only" data-service-title="Renders Fotorrealistas">
+                                    <div class="checkbox-box w-5 h-5 rounded-md border border-slate-600 bg-slate-950 flex items-center justify-center transition-all duration-200">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 5. Recorridos Virtuales -->
+                        <div class="service-item bg-slate-900/90 border border-slate-800 hover:border-red-500/60 p-2.5 sm:p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-slate-800/80 hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] group" data-service-key="recorridos">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-lg bg-red-950/70 border border-red-500/40 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                </div>
+                                <span class="font-bold text-slate-200 text-xs sm:text-sm group-hover:text-white transition-colors">Recorridos Virtuales</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-1 text-red-400 group-hover:translate-x-0.5 transition-transform">
+                                    <span class="text-[10px] font-semibold text-slate-400 group-hover:text-red-400 hidden sm:inline">Ver detalles</span>
+                                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </div>
+                                <label class="service-checkbox-wrapper relative flex items-center cursor-pointer p-1" onclick="event.stopPropagation()">
+                                    <input type="checkbox" class="service-checkbox sr-only" data-service-title="Recorridos Virtuales">
+                                    <div class="checkbox-box w-5 h-5 rounded-md border border-slate-600 bg-slate-950 flex items-center justify-center transition-all duration-200">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PESTAÑA DESPLEGABLE: SERVICIOS ADICIONALES -->
+                <div class="border border-red-500/40 rounded-2xl overflow-hidden bg-slate-950/80 shadow-[0_0_20px_rgba(239,68,68,0.15)] transition-all">
+                    <button id="toggle-comp-services-btn" class="w-full flex items-center justify-between p-3.5 bg-slate-900/90 text-white font-bold text-sm sm:text-base hover:bg-slate-800 transition-all border-b border-slate-800/80 group">
+                        <span class="flex items-center gap-2 text-red-400 group-hover:text-red-300">
+                            <svg class="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            Servicios Adicionales
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] sm:text-xs bg-red-950 text-red-400 border border-red-500/30 px-2 py-0.5 rounded-full font-semibold">5 servicios</span>
+                            <svg id="comp-chevron" class="w-4 h-4 text-red-400 transition-transform duration-300 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                    </button>
+
+                    <div id="comp-services-content" class="p-3 space-y-2 border-t border-slate-800/80 transition-all hidden">
+                        <!-- 6. Sanitarias -->
+                        <div class="service-item bg-slate-900/90 border border-slate-800 hover:border-red-500/60 p-2.5 sm:p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-slate-800/80 hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] group" data-service-key="sanitarias">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-lg bg-red-950/70 border border-red-500/40 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="2"/><circle cx="12" cy="12" r="6" stroke-width="1.5" stroke-dasharray="2 2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+                                </div>
+                                <span class="font-bold text-slate-200 text-xs sm:text-sm group-hover:text-white transition-colors">Instalaciones Sanitarias</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-1 text-red-400 group-hover:translate-x-0.5 transition-transform">
+                                    <span class="text-[10px] font-semibold text-slate-400 group-hover:text-red-400 hidden sm:inline">Ver detalles</span>
+                                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </div>
+                                <label class="service-checkbox-wrapper relative flex items-center cursor-pointer p-1" onclick="event.stopPropagation()">
+                                    <input type="checkbox" class="service-checkbox sr-only" data-service-title="Instalaciones Sanitarias">
+                                    <div class="checkbox-box w-5 h-5 rounded-md border border-slate-600 bg-slate-950 flex items-center justify-center transition-all duration-200">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 7. Hidráulicas -->
+                        <div class="service-item bg-slate-900/90 border border-slate-800 hover:border-red-500/60 p-2.5 sm:p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-slate-800/80 hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] group" data-service-key="hidraulicas">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-lg bg-red-950/70 border border-red-500/40 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 14h20M5 14v4M19 14v4M12 14V8M8 8h8M12 8V4M10 4h4"/></svg>
+                                </div>
+                                <span class="font-bold text-slate-200 text-xs sm:text-sm group-hover:text-white transition-colors">Instalaciones Hidráulicas</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-1 text-red-400 group-hover:translate-x-0.5 transition-transform">
+                                    <span class="text-[10px] font-semibold text-slate-400 group-hover:text-red-400 hidden sm:inline">Ver detalles</span>
+                                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </div>
+                                <label class="service-checkbox-wrapper relative flex items-center cursor-pointer p-1" onclick="event.stopPropagation()">
+                                    <input type="checkbox" class="service-checkbox sr-only" data-service-title="Instalaciones Hidráulicas">
+                                    <div class="checkbox-box w-5 h-5 rounded-md border border-slate-600 bg-slate-950 flex items-center justify-center transition-all duration-200">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 8. Eléctricas -->
+                        <div class="service-item bg-slate-900/90 border border-slate-800 hover:border-red-500/60 p-2.5 sm:p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-slate-800/80 hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] group" data-service-key="electricas">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-lg bg-red-950/70 border border-red-500/40 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                </div>
+                                <span class="font-bold text-slate-200 text-xs sm:text-sm group-hover:text-white transition-colors">Instalaciones Eléctricas</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-1 text-red-400 group-hover:translate-x-0.5 transition-transform">
+                                    <span class="text-[10px] font-semibold text-slate-400 group-hover:text-red-400 hidden sm:inline">Ver detalles</span>
+                                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </div>
+                                <label class="service-checkbox-wrapper relative flex items-center cursor-pointer p-1" onclick="event.stopPropagation()">
+                                    <input type="checkbox" class="service-checkbox sr-only" data-service-title="Instalaciones Eléctricas">
+                                    <div class="checkbox-box w-5 h-5 rounded-md border border-slate-600 bg-slate-950 flex items-center justify-center transition-all duration-200">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 9. Pluviales -->
+                        <div class="service-item bg-slate-900/90 border border-slate-800 hover:border-red-500/60 p-2.5 sm:p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-slate-800/80 hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] group" data-service-key="pluviales">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-lg bg-red-950/70 border border-red-500/40 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="15" width="18" height="6" rx="2" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 15v6M11 15v6M15 15v6M17 3l-3 8M10 3L7 11"/></svg>
+                                </div>
+                                <span class="font-bold text-slate-200 text-xs sm:text-sm group-hover:text-white transition-colors">Instalaciones Pluviales</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-1 text-red-400 group-hover:translate-x-0.5 transition-transform">
+                                    <span class="text-[10px] font-semibold text-slate-400 group-hover:text-red-400 hidden sm:inline">Ver detalles</span>
+                                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </div>
+                                <label class="service-checkbox-wrapper relative flex items-center cursor-pointer p-1" onclick="event.stopPropagation()">
+                                    <input type="checkbox" class="service-checkbox sr-only" data-service-title="Instalaciones Pluviales">
+                                    <div class="checkbox-box w-5 h-5 rounded-md border border-slate-600 bg-slate-950 flex items-center justify-center transition-all duration-200">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 10. Voz y Datos -->
+                        <div class="service-item bg-slate-900/90 border border-slate-800 hover:border-red-500/60 p-2.5 sm:p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-slate-800/80 hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] group" data-service-key="vozydatos">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-lg bg-red-950/70 border border-red-500/40 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071a10 10 0 0114.142 0M1.414 8.586a15 15 0 0121.172 0"/></svg>
+                                </div>
+                                <span class="font-bold text-slate-200 text-xs sm:text-sm group-hover:text-white transition-colors">Instalaciones de Voz y Datos</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-1 text-red-400 group-hover:translate-x-0.5 transition-transform">
+                                    <span class="text-[10px] font-semibold text-slate-400 group-hover:text-red-400 hidden sm:inline">Ver detalles</span>
+                                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </div>
+                                <label class="service-checkbox-wrapper relative flex items-center cursor-pointer p-1" onclick="event.stopPropagation()">
+                                    <input type="checkbox" class="service-checkbox sr-only" data-service-title="Instalaciones de Voz y Datos">
+                                    <div class="checkbox-box w-5 h-5 rounded-md border border-slate-600 bg-slate-950 flex items-center justify-center transition-all duration-200">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PESTAÑA DESPLEGABLE: PLANES DE IMPACTO -->
+                <div class="border border-red-500/40 rounded-2xl overflow-hidden bg-slate-950/80 shadow-[0_0_20px_rgba(239,68,68,0.15)] transition-all">
+                    <button id="toggle-impact-plans-btn" class="w-full flex items-center justify-between p-3.5 bg-slate-900/90 text-white font-bold text-sm sm:text-base hover:bg-slate-800 transition-all border-b border-slate-800/80 group">
+                        <span class="flex items-center gap-2 text-red-400 group-hover:text-red-300">
+                            <svg class="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            Planes de Impacto
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] sm:text-xs bg-red-950 text-red-400 border border-red-500/30 px-2 py-0.5 rounded-full font-semibold">5 planes</span>
+                            <svg id="plans-chevron" class="w-4 h-4 text-red-400 transition-transform duration-300 transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                    </button>
+
+                    <div id="impact-plans-content" class="p-3 space-y-2 border-t border-slate-800/80 transition-all hidden">
+                        <!-- 1. Visión Básica -->
+                        <div class="service-item bg-slate-900/90 border border-slate-800 hover:border-red-500/60 p-2.5 sm:p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-slate-800/80 hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] group" data-service-key="vision_basica">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-lg bg-red-950/70 border border-red-500/40 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform text-red-400 font-bold text-xs">
+                                    🎯
+                                </div>
+                                <div>
+                                    <span class="font-bold text-slate-200 text-xs sm:text-sm group-hover:text-white transition-colors block">Visión Básica</span>
+                                    <span class="text-[10px] text-emerald-400 font-semibold">$2,500 MXN</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-1 text-red-400 group-hover:translate-x-0.5 transition-transform">
+                                    <span class="text-[10px] font-semibold text-slate-400 group-hover:text-red-400 hidden sm:inline">Ver paquete</span>
+                                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </div>
+                                <label class="service-checkbox-wrapper relative flex items-center cursor-pointer p-1" onclick="event.stopPropagation()">
+                                    <input type="checkbox" class="service-checkbox sr-only" data-service-title="Plan Visión Básica ($2,500 MXN)">
+                                    <div class="checkbox-box w-5 h-5 rounded-md border border-slate-600 bg-slate-950 flex items-center justify-center transition-all duration-200">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 2. Perspectiva Profesional -->
+                        <div class="service-item bg-slate-900/90 border border-slate-800 hover:border-red-500/60 p-2.5 sm:p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-slate-800/80 hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] group" data-service-key="perspectiva_profesional">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-lg bg-red-950/70 border border-red-500/40 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform text-red-400 font-bold text-xs">
+                                    🚀
+                                </div>
+                                <div>
+                                    <span class="font-bold text-slate-200 text-xs sm:text-sm group-hover:text-white transition-colors block">Perspectiva Profesional</span>
+                                    <span class="text-[10px] text-emerald-400 font-semibold">$6,500 MXN</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-1 text-red-400 group-hover:translate-x-0.5 transition-transform">
+                                    <span class="text-[10px] font-semibold text-slate-400 group-hover:text-red-400 hidden sm:inline">Ver paquete</span>
+                                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </div>
+                                <label class="service-checkbox-wrapper relative flex items-center cursor-pointer p-1" onclick="event.stopPropagation()">
+                                    <input type="checkbox" class="service-checkbox sr-only" data-service-title="Plan Perspectiva Profesional ($6,500 MXN)">
+                                    <div class="checkbox-box w-5 h-5 rounded-md border border-slate-600 bg-slate-950 flex items-center justify-center transition-all duration-200">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 3. Impacto Premium -->
+                        <div class="service-item bg-slate-900/90 border border-slate-800 hover:border-red-500/60 p-2.5 sm:p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-slate-800/80 hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] group" data-service-key="impacto_premium">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-lg bg-red-950/70 border border-red-500/40 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform text-red-400 font-bold text-xs">
+                                    💎
+                                </div>
+                                <div>
+                                    <span class="font-bold text-slate-200 text-xs sm:text-sm group-hover:text-white transition-colors block">Impacto Premium</span>
+                                    <span class="text-[10px] text-emerald-400 font-semibold">$12,000 MXN</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-1 text-red-400 group-hover:translate-x-0.5 transition-transform">
+                                    <span class="text-[10px] font-semibold text-slate-400 group-hover:text-red-400 hidden sm:inline">Ver paquete</span>
+                                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </div>
+                                <label class="service-checkbox-wrapper relative flex items-center cursor-pointer p-1" onclick="event.stopPropagation()">
+                                    <input type="checkbox" class="service-checkbox sr-only" data-service-title="Plan Impacto Premium ($12,000 MXN)">
+                                    <div class="checkbox-box w-5 h-5 rounded-md border border-slate-600 bg-slate-950 flex items-center justify-center transition-all duration-200">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 4. Experiencia Inmersiva -->
+                        <div class="service-item bg-slate-900/90 border border-slate-800 hover:border-red-500/60 p-2.5 sm:p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-slate-800/80 hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] group" data-service-key="experiencia_inmersiva">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-lg bg-red-950/70 border border-red-500/40 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform text-red-400 font-bold text-xs">
+                                    🕶️
+                                </div>
+                                <div>
+                                    <span class="font-bold text-slate-200 text-xs sm:text-sm group-hover:text-white transition-colors block">Experiencia Inmersiva</span>
+                                    <span class="text-[10px] text-emerald-400 font-semibold">$20,000 MXN</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-1 text-red-400 group-hover:translate-x-0.5 transition-transform">
+                                    <span class="text-[10px] font-semibold text-slate-400 group-hover:text-red-400 hidden sm:inline">Ver paquete</span>
+                                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </div>
+                                <label class="service-checkbox-wrapper relative flex items-center cursor-pointer p-1" onclick="event.stopPropagation()">
+                                    <input type="checkbox" class="service-checkbox sr-only" data-service-title="Plan Experiencia Inmersiva ($20,000 MXN)">
+                                    <div class="checkbox-box w-5 h-5 rounded-md border border-slate-600 bg-slate-950 flex items-center justify-center transition-all duration-200">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 5. Modelación 3D -->
+                        <div class="service-item bg-slate-900/90 border border-slate-800 hover:border-red-500/60 p-2.5 sm:p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 hover:bg-slate-800/80 hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] group" data-service-key="modelacion_3d">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-lg bg-red-950/70 border border-red-500/40 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform text-red-400 font-bold text-xs">
+                                    🧊
+                                </div>
+                                <div>
+                                    <span class="font-bold text-slate-200 text-xs sm:text-sm group-hover:text-white transition-colors block">Modelación 3D</span>
+                                    <span class="text-[10px] text-emerald-400 font-semibold">$8,500 MXN</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-1 text-red-400 group-hover:translate-x-0.5 transition-transform">
+                                    <span class="text-[10px] font-semibold text-slate-400 group-hover:text-red-400 hidden sm:inline">Ver paquete</span>
+                                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </div>
+                                <label class="service-checkbox-wrapper relative flex items-center cursor-pointer p-1" onclick="event.stopPropagation()">
+                                    <input type="checkbox" class="service-checkbox sr-only" data-service-title="Plan Modelación 3D ($8,500 MXN)">
+                                    <div class="checkbox-box w-5 h-5 rounded-md border border-slate-600 bg-slate-950 flex items-center justify-center transition-all duration-200">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-slate-800 mt-auto flex-shrink-0 bg-slate-950 rounded-b-2xl flex flex-col gap-2.5">
+                <!-- Botón dinámico para elementos seleccionados -->
+                <button id="service-wa-selected-btn" class="hidden w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 shadow-[0_0_18px_rgba(16,185,129,0.4)] active:scale-95 text-xs sm:text-sm border border-emerald-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" class="shrink-0">
+                        <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+                    </svg>
+                    <span>Solicitar Cotización de elementos seleccionados por WhatsApp (<span id="selected-count">0</span>)</span>
+                </button>
+
+                <!-- Botón general -->
+                <a id="service-wa-main" href="https://wa.me/524776592182?text=Hola,%20quisiera%20solicitar%20un%20presupuesto%20completo%20para%20mi%20proyecto." target="_blank" rel="noopener noreferrer" class="w-full flex items-center justify-center bg-red-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-red-500 transition-all duration-200 shadow-[0_0_20px_rgba(239,68,68,0.3)] text-xs sm:text-sm">
+                    Solicitar Presupuesto completo para proyecto por WhatsApp
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- VENTANA MODAL INDEPENDIENTE: DETALLE DEL SERVICIO SELECCIONADO -->
+    <div id="service-detail-modal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        <div class="modal-content bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full relative scale-95 opacity-0 flex flex-col border border-red-500/50 overflow-hidden" style="max-height: 90vh;">
+            <!-- Header de Detalle -->
+            <div class="p-4 bg-slate-950 text-white flex items-center justify-between border-b border-slate-800">
+                <div class="flex items-center gap-2.5">
+                    <div id="detail-service-icon" class="w-8 h-8 rounded-lg bg-red-950/80 border border-red-500/40 flex items-center justify-center shrink-0">
+                        <!-- Icono Dinámico -->
+                    </div>
+                    <div>
+                        <h3 id="detail-service-title" class="font-bold text-sm sm:text-base leading-tight text-white">Título del Servicio</h3>
+                        <p id="detail-service-category" class="text-[10px] text-red-400 font-semibold uppercase tracking-wider">Categoría</p>
+                    </div>
+                </div>
+                <button id="close-service-detail-modal-btn" class="text-slate-400 hover:text-white p-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Cuerpo del Detalle -->
+            <div class="p-5 overflow-y-auto space-y-4 text-slate-300 text-sm">
+                <div class="relative aspect-video w-full rounded-xl overflow-hidden border border-slate-800 shadow-md">
+                    <img id="detail-service-img" src="" alt="Vista previa del servicio" class="w-full h-full object-cover">
+                </div>
+
+                <div class="bg-slate-950/80 border border-slate-800 p-4 rounded-xl">
+                    <h4 class="text-xs sm:text-sm font-extrabold text-red-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Descripción del Servicio
+                    </h4>
+                    <p id="detail-service-desc" class="text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-line"></p>
+                </div>
+            </div>
+
+            <!-- Acciones / CTA -->
+            <div class="p-4 bg-slate-950 border-t border-slate-800 flex flex-col sm:flex-row gap-2">
+                <button id="back-to-services-btn" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 px-4 rounded-xl text-xs transition-all text-center">
+                    &larr; Volver
+                </button>
+                <a id="detail-service-wa-btn" href="#" target="_blank" rel="noopener noreferrer" class="w-full flex-1 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs sm:text-sm border border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.35)] transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="shrink-0">
+                        <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+                    </svg>
+                    <span>Consultar Servicio</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL INSTALACION -->
+    <div id="install-instructions-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        <div class="modal-content bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full relative scale-95 opacity-0 overflow-hidden border border-slate-800">
+            <div class="bg-slate-950 p-4 border-b border-slate-800 flex items-center justify-between">
+                <h3 class="font-bold text-white text-base">Instalar Tarjeta en tu Móvil</h3>
+                <button id="close-instructions-modal-btn" class="text-slate-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="p-5 space-y-4 text-xs sm:text-sm text-slate-300">
+                <div class="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700">
+                    <p class="font-bold text-red-400 mb-1 flex items-center gap-1.5">
+                        📱 En iPhone / iOS (Safari):
+                    </p>
+                    <ol class="list-decimal list-inside space-y-1 text-slate-300">
+                        <li>Toca el botón <strong class="text-white">Compartir</strong> (el ícono del cuadrado con flecha hacia arriba).</li>
+                        <li>Desplázate hacia abajo y selecciona <strong class="text-white">Añadir a pantalla de inicio</strong>.</li>
+                        <li>Toca <strong class="text-white">Añadir</strong> en la esquina superior derecha.</li>
+                    </ol>
+                </div>
+
+                <div class="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700">
+                    <p class="font-bold text-red-400 mb-1 flex items-center gap-1.5">
+                        🤖 En Android (Chrome):
+                    </p>
+                    <ol class="list-decimal list-inside space-y-1 text-slate-300">
+                        <li>Toca el menú de tres puntos <strong class="text-white">(⋮)</strong> arriba a la derecha.</li>
+                        <li>Selecciona <strong class="text-white">Instalar aplicación</strong> o <strong class="text-white">Añadir a la pantalla de inicio</strong>.</li>
+                        <li>Confirma la instalación.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL QR -->
+    <div id="qr-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        <div class="modal-content bg-slate-900 rounded-2xl shadow-2xl max-w-xs w-full relative text-center scale-95 opacity-0 overflow-hidden border border-slate-800">
+            <div class="bg-red-600 p-5 relative">
+                <h2 class="text-xl font-bold text-white">Compartir Tarjeta</h2>
+                <button id="close-qr-modal-btn" class="absolute top-3 right-3 text-white/80 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="p-6">
+                <div id="qrcode-container" class="flex justify-center p-3 bg-white rounded-xl border border-slate-700 shadow-inner">
+                    <div id="qrcode"></div>
+                </div>
+                <p class="text-slate-400 mt-4 text-xs">Escanea este código para abrir mi tarjeta en otro dispositivo.</p>
+                <button id="native-share-btn" class="mt-6 w-full flex items-center justify-center bg-red-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-red-500 transition-all duration-200 shadow-md">
+                    Compartir Ahora
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const setupModal = (modalId, openBtnId, closeBtnId) => {
+                try {
+                    const modal = document.getElementById(modalId);
+                    const openBtn = document.getElementById(openBtnId);
+                    const closeBtn = modal ? modal.querySelector(closeBtnId) : null;
+                    if (!modal) return;
+                    const modalContent = modal.querySelector('.modal-content');
+
+                    const open = () => {
+                        modal.classList.remove('hidden');
+                        setTimeout(() => { if (modalContent) modalContent.classList.remove('scale-95', 'opacity-0'); }, 10);
+                    };
+                    const close = () => {
+                        if (modalContent) modalContent.classList.add('scale-95', 'opacity-0');
+                        setTimeout(() => modal.classList.add('hidden'), 300);
+                    };
+
+                    if (openBtn) openBtn.addEventListener('click', open);
+                    if (closeBtn) closeBtn.addEventListener('click', close);
+                    modal.addEventListener('click', (e) => e.target === modal && close());
+                } catch(e) { console.log("Modal setup error:", e); }
+            };
+
+            setupModal('install-instructions-modal', 'show-instructions-btn', '#close-instructions-modal-btn');
+            setupModal('qr-modal', 'show-qr-btn', '#close-qr-modal-btn');
+            setupModal('services-modal', 'services-btn', '#close-services-modal-btn');
+            setupModal('ai-modal', 'ai-assistant-btn', '#close-ai-modal-btn');
+
+            const toggleMainServicesBtn = document.getElementById('toggle-main-services-btn');
+            const mainServicesContent = document.getElementById('main-services-content');
+            const servicesChevron = document.getElementById('services-chevron');
+
+            if (toggleMainServicesBtn && mainServicesContent && servicesChevron) {
+                toggleMainServicesBtn.addEventListener('click', () => {
+                    mainServicesContent.classList.toggle('hidden');
+                    servicesChevron.classList.toggle('rotate-180');
+                });
+            }
+
+            const toggleCompServicesBtn = document.getElementById('toggle-comp-services-btn');
+            const compServicesContent = document.getElementById('comp-services-content');
+            const compChevron = document.getElementById('comp-chevron');
+
+            if (toggleCompServicesBtn && compServicesContent && compChevron) {
+                toggleCompServicesBtn.addEventListener('click', () => {
+                    compServicesContent.classList.toggle('hidden');
+                    compChevron.classList.toggle('rotate-180');
+                });
+            }
+
+            const toggleImpactPlansBtn = document.getElementById('toggle-impact-plans-btn');
+            const impactPlansContent = document.getElementById('impact-plans-content');
+            const plansChevron = document.getElementById('plans-chevron');
+
+            if (toggleImpactPlansBtn && impactPlansContent && plansChevron) {
+                toggleImpactPlansBtn.addEventListener('click', () => {
+                    impactPlansContent.classList.toggle('hidden');
+                    plansChevron.classList.toggle('rotate-180');
+                });
+            }
+
+            // DATOS DETALLADOS DE CADA SERVICIO PARA LA VENTANA DE DETALLE
+            const servicesData = {
+                planos: {
+                    title: 'Planos Arquitectónicos',
+                    category: 'Servicio Arquitectónico',
+                    icon: `<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 17l10-10M7 7v10h10M7 11h2M7 14h3M11 17v-3M14 17v-2"/></svg>`,
+                    img: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600&q=80',
+                    desc: 'Elaboración de plantas arquitectónicas, cortes, fachadas, detalles constructivos y especificaciones técnicas completas con precisión técnica y estética para licencias y construcción.',
+                    waQuery: 'Planos Arquitectónicos'
+                },
+                grafica: {
+                    title: 'Representación Gráfica',
+                    category: 'Servicio Arquitectónico',
+                    icon: `<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 13.5c.5-1.5.5-3.5 0-5C18 5 15 4 12 4S6 5 4.5 8.5c-1 2.5-.5 5.5 1 7.5 2 2.5 5 3 6.5 3 1.5 0 2.5-.8 2.5-2 0-.8.5-1.5 1.5-1.5h1.5c1.2 0 2-.8 2-2z"/><circle cx="7.5" cy="9.5" r="1" fill="currentColor"/><circle cx="10.5" cy="7.5" r="1" fill="currentColor"/><circle cx="14.5" cy="7.5" r="1" fill="currentColor"/><circle cx="16.5" cy="10.5" r="1" fill="currentColor"/></svg>`,
+                    img: 'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=600&q=80',
+                    desc: 'Documentación visual clara, diagramas de flujo, esquemas conceptuales y láminas de presentación de alta calidad para proyectos de construcción e inversión.',
+                    waQuery: 'Representación Gráfica'
+                },
+                modelado3d: {
+                    title: 'Modelado 3D',
+                    category: 'Servicio Arquitectónico',
+                    icon: `<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>`,
+                    img: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=600&q=80',
+                    desc: 'Creación de modelos tridimensionales hiperprecisos que permiten analizar la volumetría, luz y espacialidad del proyecto antes de su ejecución.',
+                    waQuery: 'Modelado 3D'
+                },
+                renders: {
+                    title: 'Renders Fotorrealistas',
+                    category: 'Servicio Arquitectónico',
+                    icon: `<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`,
+                    img: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80',
+                    desc: 'Imágenes digitales estáticas fotorrealistas de alta definición con simulación de texturas PBR, iluminación natural y ambientación avanzada.',
+                    waQuery: 'Renders Fotorrealistas'
+                },
+                recorridos: {
+                    title: 'Recorridos Virtuales',
+                    category: 'Servicio Arquitectónico',
+                    icon: `<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>`,
+                    img: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&q=80',
+                    desc: 'Experiencias inmersivas y animaciones en video para caminar y explorar dinámicamente espacios arquitectónicos interactivos.',
+                    waQuery: 'Recorridos Virtuales'
+                },
+                sanitarias: {
+                    title: 'Instalaciones Sanitarias',
+                    category: 'Servicio Adicional',
+                    icon: `<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="2"/><circle cx="12" cy="12" r="5" stroke-width="1.5"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v18M3 12h18M5.636 5.636l12.728 12.728M5.636 18.364L18.364 5.636"/></svg>`,
+                    img: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600&q=80',
+                    desc: 'Diseño de sistemas eficientes y normativos para distribución y evacuación de aguas servidas, ventilación y biodigestores.',
+                    waQuery: 'Instalaciones Sanitarias'
+                },
+                hidraulicas: {
+                    title: 'Instalaciones Hidráulicas',
+                    category: 'Servicio Adicional',
+                    icon: `<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 13h5v-2H2v2zm7 0h8v-2H9v2zm10 0h3v-2h-3v2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v7M9 4h6a1 1 0 011 1v2a1 1 0 01-1 1H9a1 1 0 01-1-1V5a1 1 0 011-1z"/><circle cx="12" cy="6" r="1" fill="currentColor"/></svg>`,
+                    img: 'https://images.unsplash.com/photo-1615873968403-89e068629265?w=600&q=80',
+                    desc: 'Cálculo y proyectos de abastecimiento, presión e hidroneumáticos para la red de distribución de agua potable.',
+                    waQuery: 'Instalaciones Hidráulicas'
+                },
+                electricas: {
+                    title: 'Instalaciones Eléctricas',
+                    category: 'Servicio Adicional',
+                    icon: `<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`,
+                    img: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600&q=80',
+                    desc: 'Planificación de redes eléctricas seguras, iluminación, cuadros de carga, balanceo de fases y eficiencia energética.',
+                    waQuery: 'Instalaciones Eléctricas'
+                },
+                pluviales: {
+                    title: 'Instalaciones Pluviales',
+                    category: 'Servicio Adicional',
+                    icon: `<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 14h18v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 14v7M9 14v7M12 14v7M15 14v7M18 14v7"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 3c0 1.5-1 2.5-1 2.5S6 4.5 6 3a1 1 0 012 0zM12 3c0 1.5-1 2.5-1 2.5S10 4.5 10 3a1 1 0 012 0zM16 3c0 1.5-1 2.5-1 2.5S14 4.5 14 3a1 1 0 012 0zM6 8c0 1.5-1 2.5-1 2.5S4 9.5 4 8a1 1 0 012 0zM10 8c0 1.5-1 2.5-1 2.5S8 9.5 8 8a1 1 0 012 0zM14 8c0 1.5-1 2.5-1 2.5S12 9.5 12 8a1 1 0 012 0zM18 8c0 1.5-1 2.5-1 2.5S16 9.5 16 8a1 1 0 012 0z"/></svg>`,
+                    img: 'https://images.unsplash.com/photo-1517646287270-a5a9ca602e5c?w=600&q=80',
+                    desc: 'Soluciones técnicas para la captación, conducción y manejo sustentable de aguas pluviales en azoteas y exteriores.',
+                    waQuery: 'Instalaciones Pluviales'
+                },
+                vozydatos: {
+                    title: 'Instalaciones de Voz y Datos',
+                    category: 'Servicio Adicional',
+                    icon: `<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071a10 10 0 0114.142 0M1.414 8.586a15 15 0 0121.172 0"/></svg>`,
+                    img: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=80',
+                    desc: 'Infraestructura de telecomunicaciones, canalizaciones para red Ethernet, domótica, CCTV y seguridad tecnológica.',
+                    waQuery: 'Instalaciones de Voz y Datos'
+                },
+                vision_basica: {
+                    title: 'Visión Básica',
+                    category: 'Plan de Impacto',
+                    icon: `<span class="text-lg">🎯</span>`,
+                    img: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80',
+                    desc: '• 1 render principal en alta calidad.\n• Ajuste básico de materiales.\n• Ideal para clientes que solo necesitan una vista representativa.\n\n📦 Entregables:\n• 1 Render en formato JPEG (Alta resolución).\n\n💰 Costo Paquete: $2,500 MXN\n\n📌 En caso de requerir el modelo 3D es un costo adicional, este depende del tipo de proyecto a solicitar.',
+                    waQuery: 'Plan Visión Básica ($2,500 MXN)'
+                },
+                perspectiva_profesional: {
+                    title: 'Perspectiva Profesional',
+                    category: 'Plan de Impacto',
+                    icon: `<span class="text-lg">🚀</span>`,
+                    img: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80',
+                    desc: '• 3 renders (fachada, interior y detalle).\n• Corrección avanzada de iluminación y texturas.\n• Versión optimizada para redes sociales.\n\n📦 Entregables:\n• 3 Renders en formato JPEG (Alta resolución).\n• Archivos optimizados para redes sociales.\n\n💰 Costo Paquete: $6,500 MXN\n\n📌 En caso de requerir el modelo 3D es un costo adicional, este depende del tipo de proyecto a solicitar.',
+                    waQuery: 'Plan Perspectiva Profesional ($6,500 MXN)'
+                },
+                impacto_premium: {
+                    title: 'Impacto Premium',
+                    category: 'Plan de Impacto',
+                    icon: `<span class="text-lg">💎</span>`,
+                    img: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&q=80',
+                    desc: '• 5 renders en distintas perspectivas.\n• Video corto de recorrido virtual (30-60 segundos).\n• Ajustes ilimitados de materiales y acabados.\n\n📦 Entregables:\n• 5 Renders en formato JPEG (Alta resolución).\n• 1 Video corto de recorrido virtual MP4 (30-60s).\n\n💰 Costo Paquete: $12,000 MXN\n\n📌 En caso de requerir el modelo 3D es un costo adicional, este depende del tipo de proyecto a solicitar.',
+                    waQuery: 'Plan Impacto Premium ($12,000 MXN)'
+                },
+                experiencia_inmersiva: {
+                    title: 'Experiencia Inmersiva',
+                    category: 'Plan de Impacto',
+                    icon: `<span class="text-lg">🕶️</span>`,
+                    img: 'https://images.unsplash.com/photo-1613977257363-707ba9348227?w=600&q=80',
+                    desc: '• Renders + recorrido virtual interactivo.\n• Exportación para realidad aumentada o VR.\n• Ideal para inmobiliarias y desarrolladores que buscan sorprender inversionistas.\n\n📦 Entregables:\n• Renders fotorrealistas en formato JPEG.\n• Archivo / Enlace de Recorrido Virtual Interactivo.\n• Exportación de archivos para RA / VR.\n\n💰 Costo Paquete: $20,000 MXN\n\n📌 En caso de requerir el modelo 3D es un costo adicional, este depende del tipo de proyecto a solicitar.',
+                    waQuery: 'Plan Experiencia Inmersiva ($20,000 MXN)'
+                },
+                modelacion_3d: {
+                    title: 'Modelación 3D',
+                    category: 'Plan de Impacto',
+                    icon: `<span class="text-lg">🧊</span>`,
+                    img: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=600&q=80',
+                    desc: '• Transformamos tus ideas en modelos 3D detallados y realistas, aplicables a proyectos de arquitectura residencial, diseño de muebles, cocinas y espacios interiores.\n• Este servicio permite visualizar con precisión cada elemento antes de construir o fabricar, optimizando tiempo y recursos.\n\n📦 Entregables incluidos:\n• Modelo 3D completo de la vivienda (fachada + interiores).\n• Modelado detallado de muebles y cocina con acabados realistas.\n• Renders fotorrealistas en alta calidad (mínimo 5 vistas).\n• Plano 3D interactivo para exploración digital.\n• Archivo editable.\n• Versión optimizada para presentación en PDF o catálogo digital.\n\n💰 Costo Paquete: $8,500 MXN (proyecto completo de casa habitación estándar).\n📌 (El costo puede variar según la complejidad y el número de elementos a modelar).\n\n📌 En caso de requerir el modelo 3D es un costo adicional, este depende del tipo de proyecto a solicitar.',
+                    waQuery: 'Plan Modelación 3D ($8,500 MXN)'
+                }
+            };
+
+            // SELECCIÓN Y APERTURA DE LA VENTANA DE DETALLE DEL SERVICIO
+            const serviceDetailModal = document.getElementById('service-detail-modal');
+            const detailServiceTitle = document.getElementById('detail-service-title');
+            const detailServiceCategory = document.getElementById('detail-service-category');
+            const detailServiceIcon = document.getElementById('detail-service-icon');
+            const detailServiceImg = document.getElementById('detail-service-img');
+            const detailServiceDesc = document.getElementById('detail-service-desc');
+            const detailServiceWaBtn = document.getElementById('detail-service-wa-btn');
+            const closeServiceDetailModalBtn = document.getElementById('close-service-detail-modal-btn');
+            const backToServicesBtn = document.getElementById('back-to-services-btn');
+
+            const openServiceDetail = (key) => {
+                const service = servicesData[key];
+                if (!service) return;
+
+                if (detailServiceTitle) detailServiceTitle.innerText = service.title;
+                if (detailServiceCategory) detailServiceCategory.innerText = service.category;
+                if (detailServiceIcon) detailServiceIcon.innerHTML = service.icon;
+                if (detailServiceImg) detailServiceImg.src = service.img;
+                if (detailServiceDesc) detailServiceDesc.innerText = service.desc;
+
+                if (detailServiceWaBtn) {
+                    const cleanWa = document.getElementById('input-wa')?.value?.replace(/[^0-9]/g, '') || '524776592182';
+                    const text = encodeURIComponent(`Hola ARQIA 4, estuve viendo el servicio de "${service.title}" en su tarjeta digital y me gustaría recibir información y una cotización.`);
+                    detailServiceWaBtn.href = `https://wa.me/${cleanWa}?text=${text}`;
+                }
+
+                if (serviceDetailModal) {
+                    const modalContent = serviceDetailModal.querySelector('.modal-content');
+                    serviceDetailModal.classList.remove('hidden');
+                    setTimeout(() => modalContent?.classList.remove('scale-95', 'opacity-0'), 10);
+                }
+            };
+
+            const closeServiceDetail = () => {
+                if (serviceDetailModal) {
+                    const modalContent = serviceDetailModal.querySelector('.modal-content');
+                    if (modalContent) modalContent.classList.add('scale-95', 'opacity-0');
+                    setTimeout(() => serviceDetailModal.classList.add('hidden'), 300);
+                }
+            };
+
+            document.querySelectorAll('.service-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    if (e.target.closest('.service-checkbox-wrapper')) return;
+                    const key = item.getAttribute('data-service-key');
+                    openServiceDetail(key);
+                });
+            });
+
+            // LÓGICA DE SELECCIÓN DE CASILLAS / SERVICIOS MULTIPLES
+            const serviceCheckboxes = document.querySelectorAll('.service-checkbox');
+            const selectedWaBtn = document.getElementById('service-wa-selected-btn');
+            const selectedCountSpan = document.getElementById('selected-count');
+
+            const updateSelectedServicesUI = () => {
+                const checkedBoxes = document.querySelectorAll('.service-checkbox:checked');
+                const count = checkedBoxes.length;
+
+                if (selectedCountSpan) selectedCountSpan.innerText = count;
+
+                if (count > 0) {
+                    selectedWaBtn?.classList.remove('hidden');
+                } else {
+                    selectedWaBtn?.classList.add('hidden');
+                }
+            };
+
+            serviceCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    const boxContainer = checkbox.closest('.service-checkbox-wrapper')?.querySelector('.checkbox-box');
+                    const svgIcon = boxContainer?.querySelector('svg');
+
+                    if (checkbox.checked) {
+                        boxContainer?.classList.remove('border-slate-600', 'bg-slate-950');
+                        boxContainer?.classList.add('bg-emerald-500', 'border-emerald-400', 'shadow-[0_0_12px_rgba(16,185,129,0.6)]');
+                        svgIcon?.classList.remove('opacity-0');
+                    } else {
+                        boxContainer?.classList.remove('bg-emerald-500', 'border-emerald-400', 'shadow-[0_0_12px_rgba(16,185,129,0.6)]');
+                        boxContainer?.classList.add('border-slate-600', 'bg-slate-950');
+                        svgIcon?.classList.add('opacity-0');
+                    }
+
+                    updateSelectedServicesUI();
+                });
+            });
+
+            selectedWaBtn?.addEventListener('click', () => {
+                const checkedBoxes = document.querySelectorAll('.service-checkbox:checked');
+                if (checkedBoxes.length === 0) return;
+
+                const selectedTitles = Array.from(checkedBoxes).map(cb => `• ${cb.getAttribute('data-service-title')}`);
+                const cleanWa = document.getElementById('input-wa')?.value?.replace(/[^0-9]/g, '') || '524776592182';
+
+                const message = `Hola ARQIA 4, me gustaría solicitar una cotización personalizada para los siguientes servicios seleccionados:\n\n${selectedTitles.join('\n')}\n\nQuedo atento a su respuesta.`;
+                window.open(`https://wa.me/${cleanWa}?text=${encodeURIComponent(message)}`, '_blank');
+            });
+
+            if (closeServiceDetailModalBtn) closeServiceDetailModalBtn.addEventListener('click', closeServiceDetail);
+            if (backToServicesBtn) backToServicesBtn.addEventListener('click', closeServiceDetail);
+
+            try {
+                const qrContainer = document.getElementById("qrcode");
+                if (qrContainer && typeof QRCode !== 'undefined') {
+                    qrContainer.innerHTML = "";
+                    new QRCode(qrContainer, {
+                        text: window.location.href,
+                        width: 180,
+                        height: 180,
+                        colorDark: "#020617",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                }
+            } catch(e) { console.log("QR error:", e); }
+
+            document.getElementById('native-share-btn')?.addEventListener('click', () => {
+                if (navigator.share) {
+                    navigator.share({
+                        title: document.getElementById('display-name')?.innerText || 'Tarjeta Digital',
+                        text: 'Contacto profesional de arquitectura',
+                        url: window.location.href
+                    }).catch(() => {});
+                } else {
+                    const dummy = document.createElement('input');
+                    document.body.appendChild(dummy);
+                    dummy.value = window.location.href;
+                    dummy.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(dummy);
+                    
+                    const msgBox = document.createElement('div');
+                    msgBox.className = 'fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-red-400 border border-red-500/50 px-4 py-2 rounded-xl text-xs z-50 shadow-lg';
+                    msgBox.innerText = '¡Enlace copiado al portapapeles!';
+                    document.body.appendChild(msgBox);
+                    setTimeout(() => msgBox.remove(), 2500);
+                }
+            });
+
+            const loadCustomData = () => {
+                const saved = localStorage.getItem('arq_card_data');
+                if (!saved) return;
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.name) {
+                        const nameEl = document.getElementById('display-name');
+                        const inputNameEl = document.getElementById('input-name');
+                        if (nameEl) nameEl.innerText = data.name;
+                        if (inputNameEl) inputNameEl.value = data.name;
+                    }
+                    if (data.title) {
+                        const titleEl = document.getElementById('display-title');
+                        const inputTitleEl = document.getElementById('input-title');
+                        if (titleEl) titleEl.innerText = data.title;
+                        if (inputTitleEl) inputTitleEl.value = data.title;
+                    }
+                    if (data.desc) {
+                        const descEl = document.getElementById('display-desc');
+                        const inputDescEl = document.getElementById('input-desc');
+                        if (descEl) descEl.innerText = data.desc;
+                        if (inputDescEl) inputDescEl.value = data.desc;
+                    }
+                    if (data.photo) {
+                        const photoEl = document.getElementById('display-photo');
+                        const inputPhotoEl = document.getElementById('input-photo');
+                        if (photoEl) photoEl.src = data.photo;
+                        if (inputPhotoEl) inputPhotoEl.value = data.photo;
+                    }
+                    if (data.phone) {
+                        const inputPhoneEl = document.getElementById('input-phone');
+                        if (inputPhoneEl) inputPhoneEl.value = data.phone;
+                    }
+                    if (data.email) {
+                        const inputEmailEl = document.getElementById('input-email');
+                        if (inputEmailEl) inputEmailEl.value = data.email;
+                    }
+                    if (data.address) {
+                        const addrEl = document.getElementById('display-address');
+                        const inputAddrEl = document.getElementById('input-address');
+                        const linkMapEl = document.getElementById('link-map');
+                        if (addrEl) addrEl.innerText = data.address;
+                        if (inputAddrEl) inputAddrEl.value = data.address;
+                        if (linkMapEl) linkMapEl.href = `https://maps.google.com/?q=${encodeURIComponent(data.address)}`;
+                    }
+                    if (data.wa) {
+                        const cleanWa = data.wa.replace(/[^0-9]/g, '');
+                        const inputWaEl = document.getElementById('input-wa');
+                        const linkWaEl = document.getElementById('link-whatsapp');
+                        if (inputWaEl) inputWaEl.value = cleanWa;
+                        if (linkWaEl) linkWaEl.href = `https://wa.me/${cleanWa}`;
+                        
+                        document.querySelectorAll('[id^="service-wa-"]').forEach(el => {
+                            if (el) {
+                                const currentTxt = el.href.split('text=')[1] || '';
+                                el.href = `https://wa.me/${cleanWa}?text=${currentTxt}`;
+                            }
+                        });
+                    }
+                } catch(e) { console.log('Error loading saved data:', e); }
+            };
+
+            loadCustomData();
+
+            const applyCustomization = () => {
+                try {
+                    const name = document.getElementById('input-name')?.value.trim();
+                    const title = document.getElementById('input-title')?.value.trim();
+                    const desc = document.getElementById('input-desc')?.value.trim();
+                    const photo = document.getElementById('input-photo')?.value.trim();
+                    const wa = document.getElementById('input-wa')?.value.trim();
+                    const phone = document.getElementById('input-phone')?.value.trim();
+                    const email = document.getElementById('input-email')?.value.trim();
+                    const address = document.getElementById('input-address')?.value.trim();
+
+                    if (name) document.getElementById('display-name').innerText = name;
+                    if (title) document.getElementById('display-title').innerText = title;
+                    if (desc) document.getElementById('display-desc').innerText = desc;
+                    if (photo) document.getElementById('display-photo').src = photo;
+
+                    if (address) {
+                        document.getElementById('display-address').innerText = address;
+                        document.getElementById('link-map').href = `https://maps.google.com/?q=${encodeURIComponent(address)}`;
+                    }
+
+                    if (wa) {
+                        const cleanWa = wa.replace(/[^0-9]/g, '');
+                        const waUrl = `https://wa.me/${cleanWa}`;
+                        const linkWa = document.getElementById('link-whatsapp');
+                        if (linkWa) linkWa.href = waUrl;
+
+                        document.querySelectorAll('[id^="service-wa-"]').forEach(el => {
+                            if (el) {
+                                const currentTxt = el.href.split('text=')[1] || '';
+                                el.href = `https://wa.me/${cleanWa}?text=${currentTxt}`;
+                            }
+                        });
+                    }
+
+                    const dataToSave = { name, title, desc, photo, wa, phone, email, address };
+                    localStorage.setItem('arq_card_data', JSON.stringify(dataToSave));
+
+                    const editorModal = document.getElementById('editor-modal');
+                    if (editorModal) {
+                        const modalContent = editorModal.querySelector('.modal-content');
+                        if (modalContent) modalContent.classList.add('scale-95', 'opacity-0');
+                        setTimeout(() => editorModal.classList.add('hidden'), 300);
+                    }
+                } catch(e) { console.log("Apply customization error:", e); }
+            };
+
+            document.getElementById('apply-customization-btn')?.addEventListener('click', applyCustomization);
+            document.getElementById('reset-customization-btn')?.addEventListener('click', () => {
+                localStorage.removeItem('arq_card_data');
+                window.location.reload();
+            });
+
+            // GUARDAR CONTACTO (vCard con datos de la Arquitecta Judith Orea / ARQIA 4)
+            document.getElementById('save-contact-btn')?.addEventListener('click', () => {
+                const name = "Judith Orea";
+                const company = "ARQIA 4";
+                const phone = "477-659-21-82";
+                const address = "León, Gto.";
+                const title = "Arquitecta";
+
+                const vcard = `BEGIN:VCARD
+VERSION:3.0
+FN:${name}
+N:Orea;Judith;;;
+ORG:${company}
+TITLE:${title}
+TEL;TYPE=CELL,VOICE:${phone}
+ADR;TYPE=WORK:;;${address};;;;
+END:VCARD`;
+
+                const blob = new Blob([vcard], { type: 'text/vcard;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `ARQIA4_Judith_Orea.vcf`;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+            });
+
+            // CHATBOT ARIA
+            const aiChatMessages = document.getElementById('ai-chat-messages');
+            const aiInput = document.getElementById('ai-input');
+            const aiSendBtn = document.getElementById('ai-send-btn');
+            const aiQuickSelect = document.getElementById('ai-quick-select');
+
+            const addChatMessage = (sender, text, showWaBtn = false, userQuery = '') => {
+                const isUser = sender === 'user';
+                const msgDiv = document.createElement('div');
+                msgDiv.className = isUser 
+                    ? 'bg-red-950/60 border border-red-500/30 text-red-100 p-3 rounded-xl ml-6 text-xs sm:text-sm'
+                    : 'bg-slate-800/80 border border-slate-700 text-slate-200 p-3.5 rounded-xl mr-6 text-xs sm:text-sm';
+
+                let waButtonHtml = '';
+                if (showWaBtn && userQuery) {
+                    const savedWa = document.getElementById('input-wa')?.value?.replace(/[^0-9]/g, '') || '524776592182';
+                    const prefilledMsg = encodeURIComponent(`Hola ARQIA 4, estuve consultando en su asistente virtual sobre mi proyecto: "${userQuery}". Me gustaría recibir una asesoría y cotización formal.`);
+                    const waUrl = `https://wa.me/${savedWa}?text=${prefilledMsg}`;
+                    
+                    waButtonHtml = `
+                        <div class="mt-3 pt-2.5 border-t border-slate-700/80">
+                            <p class="text-[11px] text-slate-400 mb-2">Para recibir tu cotización directa y asesoría personalizada, presiona el botón inferior:</p>
+                            <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="w-full inline-flex items-center justify-center gap-2 bg-emerald-950/70 text-emerald-300 font-extrabold py-2.5 px-3 rounded-xl text-xs transition-all duration-300 border border-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.35)] hover:bg-emerald-900/80 hover:text-emerald-200 hover:border-emerald-300 hover:shadow-[0_0_22px_rgba(52,211,153,0.7)] active:shadow-[0_0_35px_rgba(52,211,153,1)] active:scale-95">
+                                <svg class="w-4 h-4 shrink-0 fill-current" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/></svg>
+                                Solicitar Cotización Directa por WhatsApp
+                            </a>
+                        </div>
+                    `;
+                }
+
+                msgDiv.innerHTML = isUser
+                    ? `<p class="font-bold text-red-400 mb-0.5 text-[11px]">Tú</p><p>${text}</p>`
+                    : `<p class="font-bold text-red-400 mb-0.5 text-[11px] flex items-center gap-1"><svg class="w-3.5 h-3.5 text-red-500 fill-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,1)] shrink-0" viewBox="0 0 24 24"><path d="M13 2L3 14h7v8l10-12h-7l3-8z"/></svg> Asistente ARQIA 4</p><p>${text}</p>${waButtonHtml}`;
+
+                aiChatMessages?.appendChild(msgDiv);
+                if (aiChatMessages) aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+            };
+
+            const handleSendMessage = (userMsg) => {
+                const text = userMsg || aiInput?.value.trim();
+                if (!text) return;
+
+                if (!userMsg && aiInput) aiInput.value = '';
+                addChatMessage('user', text);
+
+                setTimeout(() => {
+                    let botReply = "";
+                    const normText = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
+                    const isGibberishOrNoise = (str) => {
+                        const cleanStr = str.replace(/[^a-z]/gi, '');
+                        if (/^(ja|ha|he|hj|js|ks|zd|asdf|qwer|zxcv)+$/i.test(cleanStr)) return true;
+                        const letters = str.replace(/[^a-z]/gi, '');
+                        if (letters.length > 3 && !/[aeiou]/i.test(letters)) return true;
+                        if (cleanStr.length < 2 && !/^(ok|si|no)$/i.test(cleanStr)) return true;
+                        return false;
+                    };
+
+                    const thanksKeywords = ['gracias', 'ok', 'o.k.', 'vale', 'entendido', 'perfecto', 'excelente', 'de acuerdo', 'muchas gracias', 'thx', 'thanks', 'saludos'];
+                    const isThanks = thanksKeywords.some(kw => {
+                        const regex = new RegExp(`\\b${kw}\\b`, 'i');
+                        return regex.test(normText);
+                    });
+
+                    const priceKeywords = ['cuanto', 'cuanto cobra', 'cuanto cuesta', 'costo', 'costos', 'precio', 'precios', 'cotiz', 'presupuesto', 'tarifa', 'cobran', 'cuanto sale', 'valor'];
+                    const isPriceQuery = priceKeywords.some(kw => normText.includes(kw));
+
+                    const validKeywords = [
+                        'plano', 'cocina', 'fachada', 'tramite', 'permiso', 
+                        'render', '3d', 'recorrido', 'virtual', 'hola', 'buen', 'presupuesto', 
+                        'cotiz', 'costo', 'obra', 'proyecto', 'remodela', 'diseno',
+                        'casa', 'terreno', 'construc', 'estudio', 'asesor', 'arq', 'servicio',
+                        'contacto', 'informacion', 'precio', 'edificio',
+                        'departamento', 'm2', 'metro', 'cuadrado', 'bano', 'sala',
+                        'comedor', 'recamara', 'terraza', 'alberca', 'jardin', 'cuanto', 'tarifa', 'cobran', 'valor'
+                    ];
+
+                    const hasKeyword = validKeywords.some(kw => normText.includes(kw));
+
+                    if (isThanks && !isPriceQuery && !normText.includes('plano') && !normText.includes('render') && !normText.includes('cocina')) {
+                        const thanksReplies = [
+                            "¡Es un placer atenderte! Te comento que soy ARIA, la asistente virtual de ARQIA 4. Con gusto, en breve un asesor humano se pondrá en contacto contigo. ¡Gracias por contactarnos!",
+                            "¡Con mucho gusto! Recuerda que soy ARIA, la asistente virtual de ARQIA 4. Muy pronto uno de nuestros asesores especializados te atenderá directamente. ¡Gracias por tu mensaje!",
+                            "¡Por nada! Te saluda ARIA, la asistente virtual de ARQIA 4. En breve un asesor se comunicará contigo para darle seguimiento a tu proyecto. ¡Gracias por escribirnos!"
+                        ];
+                        botReply = thanksReplies[Math.floor(Math.random() * thanksReplies.length)];
+                        addChatMessage('bot', botReply, false);
+                    } 
+                    else if (isGibberishOrNoise(normText) || (!hasKeyword && !isThanks)) {
+                        botReply = "No logro entenderte bien, ¿podrías repetírmelo de nuevo o detallar un poco más tu consulta? También puedes elegir un tema en las sugerencias de la lista arriba.";
+                        addChatMessage('bot', botReply, false);
+                    } 
+                    else if (isPriceQuery) {
+                        if (normText.includes('render') || normText.includes('3d')) {
+                            botReply = "Para darte el costo exacto de tu **Render o Modelado 3D**, el presupuesto varía según el tamaño del proyecto, el nivel de detalle y los acabados a representar. Te invitamos a hacer clic en el botón de abajo para comunicarse directamente con nosotros por WhatsApp y brindarte una cotización a tu medida.";
+                        } else if (normText.includes('plano')) {
+                            botReply = "El costo de la elaboración de **Planos Arquitectónicos** depende de los metros cuadrados del proyecto y de la complejidad del diseño. Comunícate directamente con nuestro equipo a través del botón de WhatsApp para brindarte una cotización precisa y personalizada.";
+                        } else if (normText.includes('cocina')) {
+                            botReply = "Para determinar el costo de la **Remodelación de Cocina**, evaluamos las dimensiones, acabados, herrajes y cubiertas que deseas. Escríbenos directamente por WhatsApp para realizarte un presupuesto a tu medida.";
+                        } else if (normText.includes('fachada')) {
+                            botReply = "El precio para la **Remodelación de Fachada** se calcula en función de los metros cuadrados de intervención y los materiales seleccionados. Ponte en contacto directo con nosotros por WhatsApp para enviarte una cotización sin compromiso.";
+                        } else {
+                            botReply = "Cada proyecto arquitectónico es único y su presupuesto depende de los metros cuadrados, ubicación y alcance de los trabajos. Para brindarte una cotización exacta y directa, te aconsejamos comunicarte con nosotros por WhatsApp. ¡Haciendo clic abajo te conectas de inmediato con nuestro equipo!";
+                        }
+
+                        addChatMessage('bot', botReply, true, text);
+                    }
+                    else {
+                        if (normText.includes('plano')) {
+                            botReply = "Para el desarrollo de **Planos Arquitectónicos**, en ARQIA 4 definimos distribuciones optimizadas, plantas, cortes, fachadas y especificaciones técnicas completas para construcción y licencias.";
+                        } else if (normText.includes('cocina')) {
+                            botReply = "En **Remodelación de Cocinas**, trabajamos diseño de herrajes, cubiertas de granito o cuarzo, iluminación cálida y zonificación de trabajo en triángulo para máxima eficiencia.";
+                        } else if (normText.includes('fachada')) {
+                            botReply = "Para la **Remodelación de Fachadas**, combinamos volumetría, iluminación LED rasante, revestimientos en piedra o madera y acabados de alta durabilidad.";
+                        } else if (normText.includes('render') || normText.includes('3d')) {
+                            botReply = "Creamos **Renders Fotorrealistas y Modelado 3D** hiperdetallados para que visualices materiales, texturas, iluminación y espacio antes de colocar el primer ladrillo.";
+                        } else if (normText.includes('recorrido') || normText.includes('virtual')) {
+                            botReply = "Nuestros **Recorridos Virtuales 360°** e inmersivos te permiten caminar e interactuar virtualmente dentro de tu futuro proyecto arquitectónico.";
+                        } else if (normText.includes('hola') || normText.includes('buen')) {
+                            botReply = "¡Hola! Con gusto te asesoro. Platícame, ¿qué tipo de proyecto o espacio tienes en mente (casa, remodelación, planos, renders)?";
+                        } else {
+                            botReply = "Con gusto. En **ARQIA 4** analizamos los requerimientos de tu obra para coordinar una visita técnica y entregarte una propuesta detallada.";
+                        }
+
+                        addChatMessage('bot', botReply, true, text);
+                    }
+                }, 600);
+            };
+
+            aiSendBtn?.addEventListener('click', () => handleSendMessage());
+            aiInput?.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleSendMessage();
+            });
+
+            aiQuickSelect?.addEventListener('change', (e) => {
+                const selectedVal = e.target.value;
+                if (selectedVal) {
+                    handleSendMessage(selectedVal);
+                    e.target.selectedIndex = 0;
+                }
+            });
+
+            // RENDERS IA
+            const generateRenderBtn = document.getElementById('generate-render-btn');
+            const renderOutputContainer = document.getElementById('render-output-container');
+            const renderCanvas = document.getElementById('render-canvas');
+            const renderOutputImg = document.getElementById('render-output-img');
+            const renderLoader = document.getElementById('render-loader');
+            const renderBadge = document.getElementById('render-badge');
+            const renderBadgeStyle = document.getElementById('render-badge-style');
+            const renderBadgePrompt = document.getElementById('render-badge-prompt');
+
+            generateRenderBtn?.addEventListener('click', () => {
+                const promptInput = document.getElementById('render-prompt')?.value.trim();
+                const prompt = promptInput || 'Casa residencial moderna de 2 plantas con ventanales y acabados finos';
+                const styleSelect = document.getElementById('render-style');
+                const styleVal = styleSelect ? styleSelect.value : 'modern';
+                const styleText = styleSelect ? styleSelect.options[styleSelect.selectedIndex].text : 'Moderno & Minimalista';
+
+                renderOutputContainer?.classList.remove('hidden');
+                renderLoader?.classList.remove('hidden');
+                renderCanvas?.classList.add('hidden');
+                renderOutputImg?.classList.add('hidden');
+                renderBadge?.classList.add('hidden');
+
+                const styleFallbackImages = {
+                    modern: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop&q=80",
+                    brutalist: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&auto=format&fit=crop&q=80",
+                    warm: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&auto=format&fit=crop&q=80",
+                    mediterranean: "https://images.unsplash.com/photo-1613977257363-707ba9348227?w=800&auto=format&fit=crop&q=80"
+                };
+
+                const fallbackUrl = styleFallbackImages[styleVal] || styleFallbackImages.modern;
+                const fullPrompt = `Architectural 3D render photo of ${prompt}, style ${styleText}, 8k resolution, archdaily architecture, photorealistic lighting, octane render`;
+                const seed = Math.floor(Math.random() * 90000) + 10000;
+                const aiImageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=800&height=450&nologo=true&seed=${seed}`;
+
+                let hasRendered = false;
+
+                const displayRenderImage = (srcUrl) => {
+                    if (hasRendered) return;
+                    hasRendered = true;
+
+                    if (renderOutputImg) {
+                        renderOutputImg.src = srcUrl;
+                        
+                        renderOutputImg.onload = () => {
+                            renderLoader?.classList.add('hidden');
+                            renderOutputImg.classList.remove('hidden');
+                            if (renderBadge && renderBadgeStyle && renderBadgePrompt) {
+                                renderBadgeStyle.innerText = `✦ ESTILO ${styleText}`;
+                                renderBadgePrompt.innerText = `"${prompt}"`;
+                                renderBadge.classList.remove('hidden');
+                            }
+                        };
+
+                        renderOutputImg.onerror = () => {
+                            renderOutputImg.src = fallbackUrl;
+                            renderLoader?.classList.add('hidden');
+                            renderOutputImg.classList.remove('hidden');
+                            if (renderBadge && renderBadgeStyle && renderBadgePrompt) {
+                                renderBadgeStyle.innerText = `✦ ESTILO ${styleText}`;
+                                renderBadgePrompt.innerText = `"${prompt}"`;
+                                renderBadge.classList.remove('hidden');
+                            }
+                        };
+                    }
+                };
+
+                const testImg = new Image();
+                testImg.onload = () => displayRenderImage(aiImageUrl);
+                testImg.onerror = () => displayRenderImage(fallbackUrl);
+                testImg.src = aiImageUrl;
+
+                setTimeout(() => {
+                    if (!hasRendered) displayRenderImage(fallbackUrl);
+                }, 4000);
+            });
+
+            // AUDIO PRESENTACIÓN
+            const aiAudioBtn = document.getElementById('ai-audio-btn');
+            const audioWaves = document.getElementById('audio-waves');
+            const audioSpinner = document.getElementById('audio-spinner');
+            const audioStatusText = document.getElementById('audio-status-text');
+            const togglePlayTts = document.getElementById('toggle-play-tts');
+
+            aiAudioBtn?.addEventListener('click', () => {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const textToSay = "Bienvenido a la tarjeta digital de ARQIA 4, especialistas en proyectos residenciales, remodelaciones y dirección de obra. Explora nuestros servicios y contáctanos directamente por WhatsApp.";
+                    const utterance = new SpeechSynthesisUtterance(textToSay);
+                    utterance.lang = 'es-ES';
+
+                    utterance.onstart = () => {
+                        audioSpinner?.classList.add('hidden');
+                        audioWaves?.classList.remove('hidden');
+                        if (audioStatusText) audioStatusText.innerText = 'Reproduciendo presentación...';
+                        togglePlayTts?.classList.remove('hidden');
+                    };
+
+                    utterance.onend = () => {
+                        audioWaves?.classList.add('hidden');
+                        if (audioStatusText) audioStatusText.innerText = 'Audio finalizado.';
+                        togglePlayTts?.classList.add('hidden');
+                    };
+
+                    window.speechSynthesis.speak(utterance);
+                } else {
+                    if (audioStatusText) audioStatusText.innerText = 'Tu navegador no soporta reproducción de voz sintética.';
+                }
+            });
+
+            togglePlayTts?.addEventListener('click', () => {
+                if (window.speechSynthesis.speaking) {
+                    window.speechSynthesis.cancel();
+                    audioWaves?.classList.add('hidden');
+                    if (audioStatusText) audioStatusText.innerText = 'Audio detenido.';
+                    togglePlayTts?.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
